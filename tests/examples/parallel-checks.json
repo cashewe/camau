@@ -1,0 +1,34 @@
+{
+  "entry": "run-checks",
+  "output": "combine-checks",
+  "nodes": [
+    {
+      "id": "run-checks",
+      "type": "fan-out",
+      "branches": [
+        {"id": "fraud", "target": "fraud-check"},
+        {"id": "policy", "target": "policy-check"}
+      ]
+    },
+    {
+      "id": "fraud-check",
+      "type": "task",
+      "task": "fraud-checker",
+      "next": "combine-checks"
+    },
+    {
+      "id": "policy-check",
+      "type": "task",
+      "task": "policy-checker",
+      "next": "combine-checks"
+    },
+    {
+      "id": "combine-checks",
+      "type": "converge",
+      "inputs": {
+        "fraud": "fraud-check",
+        "policy": "policy-check"
+      }
+    }
+  ]
+}

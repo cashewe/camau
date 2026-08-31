@@ -1,0 +1,43 @@
+{
+  "entry": "route-request",
+  "output": "format-response",
+  "nodes": [
+    {
+      "id": "route-request",
+      "type": "deterministic-gate",
+      "select": "/priority",
+      "cases": [
+        {"operator": "eq", "value": "high", "target": "expedite"},
+        {"operator": "otherwise", "target": "standard"}
+      ]
+    },
+    {
+      "id": "expedite",
+      "type": "task",
+      "task": "priority-handler",
+      "next": "format-response"
+    },
+    {
+      "id": "standard",
+      "type": "task",
+      "task": "standard-handler",
+      "next": "format-response"
+    },
+    {
+      "id": "format-response",
+      "type": "map-schema",
+      "mappings": [
+        {
+          "target": "/request-id",
+          "path-to-source": "/request/id",
+          "type": "string"
+        },
+        {
+          "target": "/handled-by",
+          "path-to-source": "/handled-by",
+          "type": "string"
+        }
+      ]
+    }
+  ]
+}
