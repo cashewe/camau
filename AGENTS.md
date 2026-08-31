@@ -16,3 +16,13 @@
 - a new file per object is a general rule - though if that would result in a file <10 lines, it is ok to merge.
 - in rust, do not use the anyhow crate. make use of `thiserror` to produce module scoped errors.
 - in python, do not add logging statements. These can be manually added by me as neccessary.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specifications are tracked in GitHub Issues for `cashewe/camau`. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+This is a single-context repository. See `docs/agents/domain.md`.

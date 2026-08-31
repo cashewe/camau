@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Camau routing specification",
+  "description": "Structural schema for a Camau V1 routing graph. Semantic graph rules are enforced by Assessor.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["entry", "output", "nodes"],
+  "properties": {
+    "entry": {"$ref": "#/$defs/identifier"},
+    "output": {"$ref": "#/$defs/identifier"},
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/node"}
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9._-]*$",
+      "not": {"const": "GWALL"}
+    },
+    "taskName": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9._-]*$"
+    },
+    "sourcePointer": {
+      "type": "string",
+      "pattern": "^(?:/(?:[^~/]|~[01])*)*$"
+    },
+    "targetPointer": {
+      "type": "string",
+      "pattern": "^/(?:[^~/]|~[01])*(?:/(?:[^~/]|~[01])*)*$"
+    },
+    "node": {
+      "oneOf": [
+        {"$ref": "#/$defs/taskNode"},
+        {"$ref": "#/$defs/mapNode"},
+        {"$ref": "#/$defs/deterministicGateNode"},
+        {"$ref": "#/$defs/randomisedGateNode"},
+        {"$ref": "#/$defs/fanOutNode"},
+        {"$ref": "#/$defs/convergeNode"},
+        {"$ref": "#/$defs/raiseErrorNode"}
+      ]
+    },
+    "taskNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "task"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "type": {"const": "task"},
+        "task": {"$ref": "#/$defs/taskName"},
+        "next": {"$ref": "#/$defs/identifier"}
+      }
+    },
+    "mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "type"],
+      "properties": {
+        "target": {"$ref": "#/$defs/targetPointer"},
+        "path-to-source": {"$ref": "#/$defs/sourcePointer"},
+        "default": true,
+        "type": {
+          "enum": ["object", "array", "string", "number", "integer", "boolean", "null"]
+        }
+      },
+      "anyOf": [
+        {"required": ["path-to-source"]},
+        {"required": ["default"]}
+      ]
+    },
+    "mapNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "mappings"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "type": {"const": "map-schema"},
+        "mappings": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/mapping"}
+        },
+        "next": {"$ref": "#/$defs/identifier"}
+      }
+    },
+    "scalar": {
+      "type": ["string", "number", "boolean", "null"]
+    },
+    "eqCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operator", "value", "target"],
+      "properties": {
+        "operator": {"const": "eq"},
+        "value": {"$ref": "#/$defs/scalar"},
+        "target": {"$ref": "#/$defs/identifier"}
+      }
+    },
+    "numericCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operator", "value", "target"],
+      "properties": {
+        "operator": {"enum": ["lt", "le", "ge", "gt"]},
+        "value": {"type": "number"},
+        "target": {"$ref": "#/$defs/identifier"}
+      }
+    },
+    "rangeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operator", "lower", "upper", "target"],
+      "properties": {
+        "operator": {"const": "in_range"},
+        "lower": {"type": "number"},
+        "upper": {"type": "number"},
+        "target": {"$ref": "#/$defs/identifier"}
+      }
+    },
+    "setCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operator", "values", "target"],
+      "properties": {
+        "operator": {"const": "in_set"},
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string"}
+        },
+        "target": {"$ref": "#/$defs/identifier"}
+      }
+    },
+    "otherwiseCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operator", "target"],
+      "properties": {
+        "operator": {"const": "otherwise"},
+        "target": {"$ref": "#/$defs/identifier"}
+      }
+    },
+    "deterministicCase": {
+      "oneOf": [
+        {"$ref": "#/$defs/eqCase"},
+        {"$ref": "#/$defs/numericCase"},
+        {"$ref": "#/$defs/rangeCase"},
+        {"$ref": "#/$defs/setCase"},
+        {"$ref": "#/$defs/otherwiseCase"}
+      ]
+    },
+    "deterministicGateNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "select", "cases"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "type": {"const": "deterministic-gate"},
+        "select": {"$ref": "#/$defs/sourcePointer"},
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "#/$defs/deterministicCase"}
+        }
+      }
+    },
+    "weightedRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["weight", "target"],
+      "properties": {
+        "weight": {"type": "number", "exclusiveMinimum": 0},
+        "target": {"$ref": "#/$defs/identifier"}
+      }
+    },
+    "randomisedGateNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "routes"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "type": {"const": "randomised-gate"},
+        "routes": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "#/$defs/weightedRoute"}
+        }
+      }
+    },
+    "branch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "target"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "target": {"$ref": "#/$defs/identifier"}
+      }
+    },
+    "fanOutNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "branches"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "type": {"const": "fan-out"},
+        "branches": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "#/$defs/branch"}
+        }
+      }
+    },
+    "convergeNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "inputs"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "type": {"const": "converge"},
+        "inputs": {
+          "type": "object",
+          "minProperties": 2,
+          "propertyNames": {"$ref": "#/$defs/identifier"},
+          "additionalProperties": {"$ref": "#/$defs/identifier"}
+        },
+        "next": {"$ref": "#/$defs/identifier"}
+      }
+    },
+    "raiseErrorNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "message"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "type": {"const": "raise-error"},
+        "message": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}
