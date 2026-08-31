@@ -1,0 +1,52 @@
+[build-system]
+requires = ["maturin>=1.9,<2"]
+build-backend = "maturin"
+
+[project]
+name = "camau"
+version = "0.1.0"
+description = "Rust-backed asynchronous workflow routing"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Rust",
+]
+
+[project.optional-dependencies]
+dev = [
+  "hypothesis>=6.167",
+  "mypy>=1.18",
+  "pip-audit>=2.10",
+  "psutil>=7.2",
+  "pytest>=9.1",
+  "pytest-asyncio>=1.4",
+  "ruff>=0.13",
+]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+module-name = "camau._camau"
+python-source = "src"
+manifest-path = "crates/camau-python/Cargo.toml"
+bindings = "pyo3"
+compatibility = "manylinux_2_28"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src/camau"]

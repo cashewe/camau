@@ -1,5 +1,3 @@
 # Camau
 
-cam-eye - "steps"
-
-json based message router
+README to follow... soon ^{tm}

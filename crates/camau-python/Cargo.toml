@@ -1,0 +1,21 @@
+[package]
+name = "camau-python"
+description = "Python bindings for the Camau asynchronous workflow router"
+publish = false
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lib]
+name = "_camau"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+camau-core.workspace = true
+indexmap.workspace = true
+pyo3.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true

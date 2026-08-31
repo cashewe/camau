@@ -1,0 +1,27 @@
+{
+  "environment": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 142 Stepping 11, GenuineIntel",
+    "python": "3.12.13",
+    "build_profile": "release"
+  },
+  "object_size_bytes": 10251,
+  "linear_10_node": {
+    "samples": 2000,
+    "warmup": 200,
+    "p50_ms": 0.2502,
+    "p95_ms": 0.2935
+  },
+  "fanout_10_branch": {
+    "samples": 2000,
+    "warmup": 200,
+    "p50_ms": 0.13895,
+    "p95_ms": 0.3065
+  },
+  "soak_linear": {
+    "runs": 100000,
+    "rss_before_bytes": 32452608,
+    "rss_after_bytes": 32452608,
+    "rss_delta_bytes": 0
+  }
+}

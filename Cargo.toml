@@ -1,0 +1,25 @@
+[workspace]
+members = ["crates/camau-core", "crates/camau-python"]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+
+[workspace.dependencies]
+indexmap = { version = "2.14.1", features = ["serde"] }
+pyo3 = { version = "0.29.2", features = ["abi3-py311", "extension-module"] }
+rand = "0.10.2"
+rand_chacha = "0.10.0"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.151", features = ["preserve_order"] }
+thiserror = "2.0.20"
+proptest = "1.11.0"
+camau-core = { path = "crates/camau-core" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

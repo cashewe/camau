@@ -5,6 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
+*.pyd
+*.pdb
 
 # Distribution / packaging
 .Python
@@ -151,6 +153,8 @@ activemq-data/
 .env
 .envrc
 .venv
+.tmp/
+tests/benchmarks/results/*.tmp
 env/
 venv/
 ENV/
