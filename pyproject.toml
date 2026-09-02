@@ -19,6 +19,9 @@ classifiers = [
   "Programming Language :: Rust",
 ]
 
+[project.scripts]
+camau = "camau._camau:main"
+
 [project.optional-dependencies]
 dev = [
   "hypothesis>=6.167",

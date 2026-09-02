@@ -45,6 +45,10 @@ impl Assessment {
             data: AssessmentData::new(issues),
         }
     }
+
+    pub(crate) fn from_data(data: AssessmentData) -> Self {
+        Self { data }
+    }
 }
 
 #[pymethods]

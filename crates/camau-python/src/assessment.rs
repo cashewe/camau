@@ -1,3 +1,4 @@
+use camau_core::assessment::assess_json;
 use camau_core::diagnostics::IssueData;
 use camau_core::graph;
 use camau_core::json_parser::parse_json;
@@ -34,14 +35,8 @@ pub(crate) fn assess_input(specification: &Bound<'_, PyAny>) -> (Option<JsonValu
     let (value, mut issues) = if let Ok(source) = specification.cast::<PyString>() {
         match source.to_str() {
             Ok(source) => {
-                let (value, problems) = parse_json(source);
-                (
-                    value,
-                    problems
-                        .into_iter()
-                        .map(|problem| IssueData::new(problem.code, problem.path, problem.message))
-                        .collect(),
-                )
+                let (value, assessment) = assess_json(source);
+                return (value, Assessment::from_data(assessment));
             }
             Err(error) => (
                 None,

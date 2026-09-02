@@ -4,7 +4,7 @@ V1 is complete when every requirement below is met. The two multi-stage workflow
 
 ## Package and compatibility
 
-- The package builds with cargo and maturin and exposes only Python public interfaces.
+- The package builds with cargo and maturin and exposes Python interfaces plus the Rust-backed `camau assess` command.
 - Runtime-sensitive graph assessment, compilation, routing, mapping, JSON ownership, and scheduling are implemented in Rust.
 - Rust module errors use `thiserror`; the dependency graph contains no `anyhow`.
 - Built wheels install and import on every tested CPython and platform combination in [CONSTRAINTS.md](./CONSTRAINTS.md).
@@ -21,6 +21,9 @@ V1 is complete when every requirement below is met. The two multi-stage workflow
 - Mutating the source specification or registry mapping after construction does not change the router; mutable internal state owned by a bound callable is outside this guarantee.
 - `run` accepts and returns JSON objects, never mutates its input, and returns no route metadata.
 - The standalone assessor performs no file, task, or network access.
+- `pip install camau` installs `camau assess <file> --format text|junit|github` without a separate package.
+- The CLI returns 0 for a valid specification, 1 for an invalid specification, and 2 for usage or file I/O errors.
+- CLI reports are written to stdout; usage and file I/O errors are written to stderr.
 
 ## Structural and semantic assessment
 

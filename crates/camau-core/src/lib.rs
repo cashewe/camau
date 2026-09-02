@@ -1,3 +1,4 @@
+pub mod assessment;
 pub mod diagnostics;
 pub mod execution;
 pub mod graph;

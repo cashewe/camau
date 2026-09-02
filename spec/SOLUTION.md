@@ -1,6 +1,6 @@
 # Solution
 
-`camau` is an immutable, Rust-backed workflow router exposed as a Python package. A gateway constructs a router once during service initialization by supplying a routing specification and a registry of asynchronous callables. Each request calls the compiled router with one JSON object and receives one new JSON object.
+`camau` is an immutable, Rust-backed workflow router exposed as a Python package. A gateway constructs a router once during service initialization by supplying a routing specification and a registry of asynchronous callables. Each request calls the compiled router with one JSON object and receives one new JSON object. The same wheel installs a Rust-backed command for assessing routing specification files in CI.
 
 See [CONFIGURATION.md](./CONFIGURATION.md) for the graph language, [PYTHON-API.md](./PYTHON-API.md) for the public interface and failures, [ACCEPTANCE.md](./ACCEPTANCE.md) for V1 completion criteria, and [CONTEXT.md](./CONTEXT.md) for canonical terminology.
 

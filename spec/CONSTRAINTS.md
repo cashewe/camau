@@ -4,11 +4,11 @@ The words **must**, **must not**, **should**, and **may** are normative.
 
 ## Product boundaries
 
-1. The public interface must consist of Python objects. Router execution must be asynchronous; construction, assessment, schema access, and report rendering are synchronous.
+1. The public interface consists of Python objects and the Rust-backed `camau assess` command. Router execution must be asynchronous; construction, assessment, schema access, report rendering, and CLI execution are synchronous.
 2. Runtime-sensitive routing, mapping, graph execution, and JSON ownership must be implemented in Rust and packaged with maturin.
 3. The router must invoke gateway-supplied asynchronous callables. It must not own transport, authentication, retries, timeouts, coercion, connection pooling, or service discovery.
 4. Router input, task input, task output, and router output must be JSON objects.
-5. Routing specifications must be accepted as a Python dictionary or JSON string. The package must not load configuration files or reload configuration.
+5. Routing specifications must be accepted as a Python dictionary or JSON string by the library. Only the assessment CLI may load a specification file; neither interface reloads configuration.
 6. Configuration is trusted, version-controlled application configuration. It must not contain executable expressions, callbacks, credentials, or secrets.
 
 ## Graph and execution
@@ -28,7 +28,7 @@ The words **must**, **must not**, **should**, and **may** are normative.
 1. The editable routing surface must be explicit, human-readable JSON with visible forward links through `next` and explicit convergence inputs.
 2. One packaged JSON Schema must define structural validity and be consumed by both assessment and router construction.
 3. Semantic validation that JSON Schema cannot express must be performed by the assessor.
-4. Assessment must report all detectable issues in deterministic order and render readable text, JUnit XML, and GitHub workflow annotations without performing file I/O.
+4. Assessment must report all detectable issues in deterministic order and render readable text, JUnit XML, and GitHub workflow annotations. Library renderers perform no file I/O; the CLI reads one named specification and writes its report to standard output.
 5. The configuration format is governed by the package major version. Minor and patch releases must remain compatible with valid configurations from the same major version.
 6. V1 must not support custom node types, but node implementations must declare their boundary and edge capabilities so new built-in types can be added without duplicating validation rules.
 

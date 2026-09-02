@@ -3,6 +3,8 @@ from typing import Any, TypeAlias
 
 from .types import AsyncTask, JsonObject, JsonValue
 
+def main() -> int: ...
+
 class Issue:
     @property
     def code(self) -> str: ...

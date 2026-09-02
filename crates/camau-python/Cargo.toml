@@ -13,6 +13,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 camau-core.workspace = true
+clap.workspace = true
 indexmap.workspace = true
 pyo3.workspace = true
 thiserror.workspace = true
