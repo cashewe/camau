@@ -1,6 +1,7 @@
 import shutil
 import subprocess
 import sysconfig
+from pathlib import Path
 
 
 def run_camau(*arguments: str) -> subprocess.CompletedProcess[str]:
@@ -46,3 +47,14 @@ def test_cli_distinguishes_valid_input_from_file_errors(tmp_path):
     assert missing.returncode == 2
     assert missing.stdout == ""
     assert "failed to read" in missing.stderr
+
+
+def test_cli_renders_example_as_markdown():
+    example = Path(__file__).parent / "examples" / "gateway-routing-plan.json"
+    expected = example.with_suffix(".md").read_text(encoding="utf-8")
+
+    result = run_camau("diagram", str(example))
+
+    assert result.returncode == 0
+    assert result.stderr == ""
+    assert result.stdout == expected
