@@ -26,3 +26,7 @@ Issues and specifications are tracked in GitHub Issues for `cashewe/camau`. See 
 ### Domain docs
 
 This is a single-context repository. See `docs/agents/domain.md`.
+
+### Routing specification authoring
+
+Use `.agents/skills/camau-routing/SKILL.md` when creating, modifying, repairing, or reviewing a Camau routing specification.

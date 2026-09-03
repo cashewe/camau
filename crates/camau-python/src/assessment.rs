@@ -9,6 +9,8 @@ use pyo3::types::{PyDict, PyString};
 use crate::issue::Assessment;
 use crate::python_value::{from_python, to_python};
 
+pub(crate) const SCHEMA_JSON: &str = include_str!("../../../spec/camau.schema.json");
+
 #[pyclass(frozen, module = "camau")]
 pub(crate) struct Assessor;
 
@@ -21,7 +23,7 @@ impl Assessor {
 
     #[staticmethod]
     fn schema(py: Python<'_>) -> PyResult<Py<PyAny>> {
-        let (schema, problems) = parse_json(include_str!("../../../spec/camau.schema.json"));
+        let (schema, problems) = parse_json(SCHEMA_JSON);
         if !problems.is_empty() {
             return Err(pyo3::exceptions::PyRuntimeError::new_err(
                 "packaged Camau schema is invalid",

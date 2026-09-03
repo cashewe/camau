@@ -1,7 +1,10 @@
+import json
 import shutil
 import subprocess
 import sysconfig
 from pathlib import Path
+
+from camau import Assessor
 
 
 def run_camau(*arguments: str) -> subprocess.CompletedProcess[str]:
@@ -29,6 +32,14 @@ def test_cli_reports_invalid_specification_in_ci_formats(tmp_path):
     assert "::error" in github.stdout
     assert "file=" in github.stdout
     assert github.stderr == ""
+
+
+def test_cli_writes_packaged_schema():
+    result = run_camau("schema")
+
+    assert result.returncode == 0
+    assert result.stderr == ""
+    assert json.loads(result.stdout) == Assessor.schema()
 
 
 def test_cli_distinguishes_valid_input_from_file_errors(tmp_path):

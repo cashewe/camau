@@ -2,7 +2,7 @@
 
 A routing specification is a trusted JSON object. The package accepts it as a Python dictionary or JSON string; reading and versioning files belongs to the gateway. The package major version governs this format, so the document has no `version` property.
 
-The packaged [camau.schema.json](./camau.schema.json) is the structural authority for local JSON shapes. Cross-property, cross-node, graph, and runtime data-model rules in this document are semantic requirements enforced by the assessor or executor.
+The packaged [camau.schema.json](./camau.schema.json) is the structural authority for local JSON shapes and is available through `Assessor.schema()` or `camau schema`. Cross-property, cross-node, graph, and runtime data-model rules in this document are semantic requirements enforced by the assessor or executor.
 
 | Structural JSON Schema checks | Semantic assessor checks |
 |---|---|

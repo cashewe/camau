@@ -9,6 +9,8 @@ use camau_core::graph::compile;
 use clap::{Parser, Subcommand, ValueEnum};
 use pyo3::prelude::*;
 
+use crate::assessment::SCHEMA_JSON;
+
 const INVALID: u8 = 1;
 const ERROR: u8 = 2;
 
@@ -25,6 +27,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Write the structural routing specification schema.
+    Schema,
     /// Assess one routing specification.
     Assess {
         /// JSON routing specification to assess.
@@ -80,12 +84,21 @@ where
     };
 
     match cli.command {
+        Command::Schema => schema(stdout, stderr),
         Command::Assess {
             specification,
             format,
         } => assess(&specification, format, stdout, stderr),
         Command::Diagram { specification } => diagram(&specification, stdout, stderr),
     }
+}
+
+fn schema(stdout: &mut impl Write, stderr: &mut impl Write) -> u8 {
+    if write_report(stdout, SCHEMA_JSON).is_err() {
+        let _ = writeln!(stderr, "camau: failed to write schema");
+        return ERROR;
+    }
+    0
 }
 
 fn diagram(specification: &Path, stdout: &mut impl Write, stderr: &mut impl Write) -> u8 {
@@ -185,6 +198,18 @@ mod tests {
         assert_eq!(exit_code, INVALID);
         assert!(stderr.is_empty());
         assert!(String::from_utf8(stdout).unwrap().contains("<testsuite"));
+    }
+
+    #[test]
+    fn schema_writes_packaged_schema() {
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+
+        let exit_code = run_from(["camau", "schema"], &mut stdout, &mut stderr);
+
+        assert_eq!(exit_code, 0);
+        assert!(stderr.is_empty());
+        assert_eq!(String::from_utf8(stdout).unwrap(), SCHEMA_JSON);
     }
 
     #[test]

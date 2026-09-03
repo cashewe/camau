@@ -4,7 +4,7 @@ V1 is complete when every requirement below is met. The two multi-stage workflow
 
 ## Package and compatibility
 
-- The package builds with cargo and maturin and exposes Python interfaces plus the Rust-backed `camau assess` and `camau diagram` commands.
+- The package builds with cargo and maturin and exposes Python interfaces plus the Rust-backed `camau schema`, `camau assess`, and `camau diagram` commands.
 - Runtime-sensitive graph assessment, compilation, routing, mapping, JSON ownership, and scheduling are implemented in Rust.
 - Rust module errors use `thiserror`; the dependency graph contains no `anyhow`.
 - Built wheels install and import on every tested CPython and platform combination in [CONSTRAINTS.md](./CONSTRAINTS.md).
@@ -21,7 +21,7 @@ V1 is complete when every requirement below is met. The two multi-stage workflow
 - Mutating the source specification or registry mapping after construction does not change the router; mutable internal state owned by a bound callable is outside this guarantee.
 - `run` accepts and returns JSON objects, never mutates its input, and returns no route metadata.
 - The standalone assessor performs no file, task, or network access.
-- `pip install camau` installs `camau assess <file> --format text|junit|github` without a separate package.
+- `pip install camau` installs `camau schema`, `camau assess <file> --format text|junit|github`, and `camau diagram <file>` without a separate package.
 - `camau diagram <file>` validates the routing specification and writes a self-contained Markdown document containing a Mermaid workflow graph and node details. Its legend and edge styles distinguish mutually exclusive routes, concurrently active branches, and sequential continuation.
 - The CLI returns 0 for a valid specification, 1 for an invalid specification, and 2 for usage or file I/O errors.
 - CLI reports are written to stdout; usage and file I/O errors are written to stderr.
