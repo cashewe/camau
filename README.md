@@ -1,22 +1,34 @@
 # Camau
 
-Camau is a Rust-backed asynchronous JSON workflow router for Python.
+![piccy](docs/front_page.jpg)
+(`camau` - *Welsh*, 'cam-eye', meaning 'steps')
 
-## Work with a routing specification
+Camau is a Rust-backed asynchronous JSON workflow router for Python. the tool makes use of a generic vocabulary of tasks to manage routing for JSON messages between APIs - particularly useful for gateway services in machine learning usecases. `Camau` makes use of json configuration files for its routing rules, to allow for human readable and machine enforcible boundaries.
 
-Installing the package also installs the `camau` command:
+## Setup
 
-```console
-pip install camau
-camau schema > camau.schema.json
-camau assess route.json
-camau assess route.json --format junit > camau.xml
-camau assess route.json --format github
-camau diagram route.json > route.md
+to use `camau` you must first install it, ideally into a python virtual environment:
+
+```
+pip install uv
+
+uv venv --python 3.13
+source .venv/bin/activate # or .venv\Scripts\activate on windows
+
+uv pip install camau
 ```
 
-`schema` writes the packaged structural JSON Schema to stdout. `assess` writes its report to stdout. `diagram` validates the specification, then writes a Markdown document containing a Mermaid workflow graph and a human-readable node table to stdout. Exit code 0 means the command succeeded, 1 means assessment found issues, and 2 means the command or file input failed.
+from here, `camau` exposes 4 tools:
 
-Semantic graph rules remain the responsibility of `assess`; schema conformance alone is not sufficient.
+1. python based `Router` object (for use in APIs)
+2. cmd schema analysis tool (for use in CI/CD)
+3. cmd based routing visualisation tool (for use in user documentation)
+4. agent skill for writing new configurations
 
-See [the example routing specification](./tests/examples/gateway-routing-plan.json) and its [generated Markdown diagram](./tests/examples/gateway-routing-plan.md).
+### Router
+
+### Analysis
+
+### Visualiser
+
+### Skill
