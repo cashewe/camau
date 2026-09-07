@@ -9,7 +9,7 @@ use pyo3::types::{PyDict, PyString};
 use crate::issue::Assessment;
 use crate::python_value::{from_python, to_python};
 
-pub(crate) const SCHEMA_JSON: &str = include_str!("../../../spec/camau.schema.json");
+pub(crate) const SCHEMA_JSON: &str = include_str!("../schema/camau.schema.json");
 
 #[pyclass(frozen, module = "camau")]
 pub(crate) struct Assessor;
