@@ -67,7 +67,12 @@ jobs:
           python-version: ${{ matrix.python }}
       - uses: dtolnay/rust-toolchain@stable
       - run: python -m pip install --upgrade pip maturin pytest pytest-asyncio hypothesis psutil
-      - run: maturin build --release --locked --out dist
+      - name: Build native Linux test wheel
+        if: runner.os == 'Linux'
+        run: maturin build --release --locked --compatibility linux --out dist
+      - name: Build Windows test wheel
+        if: runner.os == 'Windows'
+        run: maturin build --release --locked --out dist
       - name: Install and import the built wheel
         run: >-
           python -c "import glob, subprocess, sys;
@@ -159,7 +164,9 @@ jobs:
           command: build
           working-directory: ${{ runner.temp }}/camau-sdist/camau-${{ needs.release-check.outputs.version }}
           manylinux: "off"
-          args: --release --locked --out ${{ runner.temp }}/camau-sdist-wheel
+          args: >-
+            --release --locked --compatibility linux
+            --out ${{ runner.temp }}/camau-sdist-wheel
       - name: Install and smoke-test wheel rebuilt from sdist
         run: >-
           python tools/release.py wheel
