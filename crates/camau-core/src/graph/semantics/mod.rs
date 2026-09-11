@@ -10,7 +10,8 @@ use crate::json_pointer::valid_identifier;
 use crate::json_value::JsonValue;
 
 use super::algorithms::{
-    can_reach_terminal, outgoing_references, reachable_from, strongly_connected,
+    can_reach_terminal, convergence_sources, outgoing_references, reachable_from,
+    strongly_connected,
 };
 use super::{NodeKind, text};
 use activity::validate_activity;
@@ -126,7 +127,20 @@ pub(super) fn validate_semantics(value: &JsonValue, issues: &mut Vec<IssueData>)
                 issues.push(IssueData::new(
                     "REFERENCE_MISSING",
                     path,
-                    "node reference is missing or ambiguous",
+                    format!("node reference {target:?} is missing or ambiguous"),
+                ));
+                reference_failure = true;
+            }
+        }
+        for (source, path) in convergence_sources(node, index) {
+            if !by_id.contains_key(source.as_str())
+                && valid_identifier(&source)
+                && source != "GWALL"
+            {
+                issues.push(IssueData::new(
+                    "REFERENCE_MISSING",
+                    path,
+                    format!("convergence source {source:?} is missing or ambiguous"),
                 ));
                 reference_failure = true;
             }

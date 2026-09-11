@@ -49,7 +49,7 @@ Any in-run failure cancels all active sibling tasks before it propagates. When a
 
 ## Randomness
 
-Randomised gates normalize configured positive finite weights and sample once per execution of the gate. `Router` accepts an optional integer seed. A seeded router promises a repeatable sequence only for the same graph, serial run order, and graph executions with no simultaneously active randomised gates. Concurrent scheduling may consume samples in a different order. Seeding is a testing aid, not stable entity allocation.
+Randomised gates normalize configured finite, non-negative weights with at least one positive route and sample once per execution of the gate. `Router` accepts an optional integer seed. A seeded router promises a repeatable sequence only for the same graph, serial run order, and graph executions with no simultaneously active randomised gates. Concurrent scheduling may consume samples in a different order. Seeding is a testing aid, not stable entity allocation.
 
 ## Extensibility
 

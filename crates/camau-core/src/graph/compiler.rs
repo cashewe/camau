@@ -44,7 +44,7 @@ pub fn compile(value: &JsonValue) -> Option<CompiledGraph> {
                     .collect::<Option<Vec<_>>>()?,
             },
             "randomised-gate" => {
-                let routes = object
+                let mut routes = object
                     .get("routes")?
                     .array()?
                     .iter()
@@ -56,7 +56,17 @@ pub fn compile(value: &JsonValue) -> Option<CompiledGraph> {
                         })
                     })
                     .collect::<Option<Vec<_>>>()?;
-                let total = routes.iter().map(|route| route.weight).sum();
+                let scale = routes.iter().map(|route| route.weight).reduce(f64::max)?;
+                if !scale.is_finite() || scale <= 0.0 {
+                    return None;
+                }
+                for route in &mut routes {
+                    route.weight /= scale;
+                }
+                let total: f64 = routes.iter().map(|route| route.weight).sum();
+                if !total.is_finite() || total <= 0.0 {
+                    return None;
+                }
                 NodeKind::Randomised { routes, total }
             }
             "fan-out" => NodeKind::FanOut {

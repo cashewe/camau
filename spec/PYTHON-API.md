@@ -47,7 +47,7 @@ Execution:
 - returns no routing metadata and emits no logging or telemetry; and
 - does not mutate the caller's payload.
 
-Passing a non-dictionary payload raises `TypeError`. A dictionary containing non-string keys, out-of-range integers, non-finite numbers, invalid Unicode, or values outside the JSON data model raises `ValueError`. These are caller argument errors, not graph, task, or routing failures.
+Passing a non-dictionary payload raises `TypeError`. A dictionary containing non-string keys, out-of-range integers, non-finite numbers, invalid Unicode, reference cycles, more than 128 nested containers, or values outside the JSON data model raises `ValueError` at the offending JSON Pointer. These are caller argument errors, not graph, task, or routing failures. The same cycle and depth limits produce a `JSON_VALUE` assessment issue for dictionary specifications and a `TaskResultError` with reason `invalid_json` for task results.
 
 ## Numeric data model
 
@@ -147,3 +147,5 @@ Gate metadata describes only a direct gate-to-raise-error edge. All optional att
 Every in-run `CamauError` cancels unfinished sibling work before it propagates. An exception raised by a task is not wrapped: the router requests cancellation of unfinished siblings, awaits their termination, suppresses resulting cancellation exceptions, and re-raises the exact exception instance. `asyncio.CancelledError` raised by the caller or a task follows the same cleanup and then propagates unchanged. Bound tasks must cooperate with asyncio cancellation; a task that suppresses cancellation may delay failure propagation.
 
 If several tasks have already failed before cancellation takes effect, the executor may propagate any one of those original exception instances. No branch-order or event-loop-turn tie-break is guaranteed; secondary failures are consumed so they do not become unhandled task errors.
+
+When several task invocations return the same awaitable object, the router schedules that object once and applies its single result to every associated routing ticket. A run-ending failure or caller cancellation requests cancellation once per distinct unfinished awaitable, after every ticket in that run has been abandoned.

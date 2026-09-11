@@ -61,8 +61,10 @@ proptest! {
         );
         let (value, problems) = parse_json(&source);
         prop_assert!(problems.is_empty());
-        let issues = assess(&value.unwrap());
+        let value = value.unwrap();
+        let issues = assess(&value);
         prop_assert!(issues.is_empty(), "{issues:?}");
+        prop_assert!(compile(&value).is_some());
     }
 
     #[test]
@@ -91,8 +93,32 @@ proptest! {
             prop_assert!(false, "entry did not compile as randomised gate");
             return Ok(());
         };
-        let expected: f64 = weights.iter().map(|weight| f64::from(*weight)).sum();
+        let scale = weights.iter().copied().max().unwrap();
+        let expected: f64 = weights
+            .iter()
+            .map(|weight| f64::from(*weight) / f64::from(scale))
+            .sum();
         prop_assert_eq!(total, expected);
+    }
+}
+
+#[test]
+fn extreme_and_subnormal_random_weights_compile_to_finite_distributions() {
+    for weights in [[1e308, 1e308], [5e-324, 1e-323], [0.0, 1e308]] {
+        let source = format!(
+            r#"{{"entry":"gate","output":"done","nodes":[{{"id":"gate","type":"randomised-gate","routes":[{{"weight":{},"target":"left"}},{{"weight":{},"target":"right"}}]}},{{"id":"left","type":"task","task":"left","next":"done"}},{{"id":"right","type":"task","task":"right","next":"done"}},{{"id":"done","type":"map-schema","mappings":[{{"target":"/ok","default":true,"type":"boolean"}}]}}]}}"#,
+            weights[0], weights[1]
+        );
+        let (value, problems) = parse_json(&source);
+        assert!(problems.is_empty());
+        let value = value.unwrap();
+        assert!(assess(&value).is_empty());
+        let graph = compile(&value).unwrap();
+        let NodeKind::Randomised { routes, total } = &graph.nodes[graph.entry].kind else {
+            panic!("expected randomised gate");
+        };
+        assert!(total.is_finite() && *total > 0.0);
+        assert!(routes.iter().all(|route| route.weight.is_finite()));
     }
 }
 
@@ -118,5 +144,7 @@ fn ten_thousand_node_graph_assesses_iteratively() {
     );
     let (value, problems) = parse_json(&source);
     assert!(problems.is_empty());
-    assert!(assess(&value.unwrap()).is_empty());
+    let value = value.unwrap();
+    assert!(assess(&value).is_empty());
+    assert!(compile(&value).is_some());
 }

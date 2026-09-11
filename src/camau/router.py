@@ -31,14 +31,23 @@ class Router:
 
     async def run(self, payload: JsonObject) -> JsonObject:
         execution = self._inner.new_run(payload)
-        pending: dict[asyncio.Future[JsonObject], int] = {}
+        pending: dict[asyncio.Future[JsonObject], list[int]] = {}
+        scheduled: dict[int, tuple[object, asyncio.Future[JsonObject]]] = {}
 
         def schedule(requests: list[tuple[int, AsyncTask, JsonObject]]) -> None:
             for ticket, task, task_payload in requests:
                 result = task(task_payload)
                 if not inspect.isawaitable(result):
                     execution.reject(ticket, result, "non_awaitable")
-                pending[asyncio.ensure_future(result)] = ticket
+                identity = id(result)
+                existing = scheduled.get(identity)
+                future: asyncio.Future[JsonObject]
+                if existing is None:
+                    future = asyncio.ensure_future(result)
+                    scheduled[identity] = (result, future)
+                else:
+                    future = existing[1]
+                pending.setdefault(future, []).append(ticket)
 
         try:
             requests, output = execution.start()
@@ -48,12 +57,13 @@ class Router:
                     raise RuntimeError("compiled workflow stopped without an output")
                 done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
                 for completed in done:
-                    ticket = pending.pop(completed)
+                    tickets = pending.pop(completed)
                     result = completed.result()
-                    requests, candidate = execution.resume(ticket, result)
-                    schedule(requests)
-                    if candidate is not None:
-                        output = candidate
+                    for ticket in tickets:
+                        requests, candidate = execution.resume(ticket, result)
+                        schedule(requests)
+                        if candidate is not None:
+                            output = candidate
             return output
         except BaseException:
             for task in pending:

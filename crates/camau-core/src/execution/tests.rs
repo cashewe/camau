@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::graph::compile;
+use crate::graph::{CompiledGraph, Node, NodeKind, compile};
 use crate::json_parser::parse_json;
 use crate::json_value::JsonValue;
 
@@ -51,4 +51,29 @@ fn mapping_failures_own_their_context() {
     assert_eq!(failure.target, "/name");
     assert_eq!(failure.source_path.as_deref(), Some("/missing"));
     assert_eq!(failure.reason, "source_missing");
+}
+
+#[test]
+fn invalid_compiled_random_distribution_returns_a_typed_error() {
+    let graph = CompiledGraph {
+        entry: 0,
+        output: 0,
+        nodes: vec![Node {
+            id: "gate".to_owned(),
+            kind: NodeKind::Randomised {
+                routes: Vec::new(),
+                total: f64::INFINITY,
+            },
+        }],
+    };
+    let mut execution = Execution::new(
+        Arc::new(graph),
+        seeded_rng(Some(1)),
+        JsonValue::Object(indexmap::IndexMap::new()),
+    );
+
+    assert!(matches!(
+        execution.start(),
+        Err(ExecutionFailure::InvalidCompiledGraph { .. })
+    ));
 }

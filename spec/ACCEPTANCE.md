@@ -40,7 +40,7 @@ V1 is complete when every requirement below is met. The two multi-stage workflow
 - Task nodes call only their named bound callable and replace the current object with its valid result.
 - map-schema tests cover every supported type, nested object targets, whole-array copying, defaults, missing sources, type mismatch, and target conflicts.
 - Deterministic-gate tests cover `eq`, `lt`, `le`, `ge`, `gt`, inclusive `in_range`, string-only `in_set`, mandatory `otherwise`, missing paths, incompatible types, numeric equality, and rejection of every pairwise overlap in the V1 operator set.
-- Randomised-gate tests cover normalization, seeded serial repeatability when no randomised gates are simultaneously active, positive finite weights, unique targets, and per-execution sampling.
+- Randomised-gate tests cover normalization, seeded serial repeatability when no randomised gates are simultaneously active, finite non-negative weights with a positive total, unique targets, and per-execution sampling.
 - Fan-out proves all roots are scheduled before awaiting a result, carries isolated objects, and preserves configured convergence key order independent of completion order.
 - Converge waits for exactly its declared active inputs and produces the specified flow-ID-keyed object.
 - raise-error raises `RoutingSelectionError` with `code == "GWALL"` and cancels active siblings.

@@ -350,7 +350,7 @@ def exclusive_convergence():
                     {
                         "id": "gate",
                         "type": "randomised-gate",
-                        "routes": [{"weight": 0, "target": "out"}, {"weight": 1, "target": "stop"}],
+                        "routes": [{"weight": 0, "target": "out"}, {"weight": 0, "target": "stop"}],
                     },
                     {"id": "out", "type": "task", "task": "out"},
                     {"id": "stop", "type": "raise-error", "message": "stop"},

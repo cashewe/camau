@@ -72,3 +72,43 @@ async def test_randomised_gate_seeded_serial_repeatability_and_reachability():
     assert 0.70 < left_share < 0.80
     with pytest.raises(TypeError):
         Router(specification, {"left": left, "right": right}, seed=True)
+
+
+@pytest.mark.asyncio
+async def test_randomised_gate_handles_extreme_and_zero_weights():
+    async def left(_payload):
+        return {"route": "left"}
+
+    async def right(_payload):
+        return {"route": "right"}
+
+    async def routes(weights, samples):
+        specification = {
+            "entry": "gate",
+            "output": "done",
+            "nodes": [
+                {
+                    "id": "gate",
+                    "type": "randomised-gate",
+                    "routes": [
+                        {"weight": weights[0], "target": "left"},
+                        {"weight": weights[1], "target": "right"},
+                    ],
+                },
+                {"id": "left", "type": "task", "task": "left", "next": "done"},
+                {"id": "right", "type": "task", "task": "right", "next": "done"},
+                {
+                    "id": "done",
+                    "type": "map-schema",
+                    "mappings": [
+                        {"target": "/route", "path-to-source": "/route", "type": "string"}
+                    ],
+                },
+            ],
+        }
+        router = Router(specification, {"left": left, "right": right}, seed=4)
+        return [(await router.run({}))["route"] for _ in range(samples)]
+
+    assert set(await routes((1e308, 1e308), 100)) == {"left", "right"}
+    assert await routes((0, 1e308), 20) == ["right"] * 20
+    assert await routes((1e-300, 1e308), 20) == ["right"] * 20

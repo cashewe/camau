@@ -2,8 +2,21 @@ import asyncio
 
 import pytest
 
-from camau import Router
+from camau import Assessor, ConfigurationError, Router
 from tests.support.specifications import fanout_spec
+
+
+def test_missing_convergence_source_is_a_path_aware_assessment_error():
+    specification = fanout_spec()
+    specification["nodes"][3]["inputs"]["second"] = "missing"
+
+    assessment = Assessor.assess(specification)
+
+    issue = next(issue for issue in assessment.issues if issue.code == "REFERENCE_MISSING")
+    assert issue.path == "/nodes/3/inputs/second"
+    assert '"missing"' in issue.message
+    with pytest.raises(ConfigurationError):
+        Router(specification, {})
 
 
 @pytest.mark.asyncio

@@ -137,6 +137,8 @@ pub(super) fn validate_node(value: &JsonValue, index: usize, issues: &mut Vec<Is
                         ));
                     }
                     let mut targets = HashSet::new();
+                    let mut weights_valid = true;
+                    let mut has_positive_weight = false;
                     for (route_index, route) in routes.iter().enumerate() {
                         let route_path = format!("{path}/routes/{route_index}");
                         let Some(route) = route.object() else {
@@ -156,18 +158,27 @@ pub(super) fn validate_node(value: &JsonValue, index: usize, issues: &mut Vec<Is
                         );
                         match route.get("weight").and_then(json_number) {
                             Some(weight)
-                                if weight.as_f64().is_finite() && weight.as_f64() > 0.0 => {}
-                            Some(_) => issues.push(IssueData::new(
-                                "RANDOM_WEIGHT",
-                                format!("{route_path}/weight"),
-                                "weight must be finite and positive",
-                            )),
-                            None if route.contains_key("weight") => issues.push(IssueData::new(
-                                "RANDOM_WEIGHT",
-                                format!("{route_path}/weight"),
-                                "weight must be a number",
-                            )),
-                            None => {}
+                                if weight.as_f64().is_finite() && weight.as_f64() >= 0.0 =>
+                            {
+                                has_positive_weight |= weight.as_f64() > 0.0;
+                            }
+                            Some(_) => {
+                                weights_valid = false;
+                                issues.push(IssueData::new(
+                                    "RANDOM_WEIGHT",
+                                    format!("{route_path}/weight"),
+                                    "weight must be finite and non-negative",
+                                ));
+                            }
+                            None if route.contains_key("weight") => {
+                                weights_valid = false;
+                                issues.push(IssueData::new(
+                                    "RANDOM_WEIGHT",
+                                    format!("{route_path}/weight"),
+                                    "weight must be a number",
+                                ));
+                            }
+                            None => weights_valid = false,
                         }
                         validate_identifier_field(
                             route.get("target"),
@@ -184,6 +195,13 @@ pub(super) fn validate_node(value: &JsonValue, index: usize, issues: &mut Vec<Is
                                 ));
                             }
                         }
+                    }
+                    if weights_valid && !has_positive_weight {
+                        issues.push(IssueData::new(
+                            "RANDOM_WEIGHT",
+                            format!("{path}/routes"),
+                            "at least one route weight must be positive",
+                        ));
                     }
                 }
                 Some(_) => issues.push(IssueData::new(

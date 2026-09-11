@@ -173,7 +173,7 @@
       "additionalProperties": false,
       "required": ["weight", "target"],
       "properties": {
-        "weight": {"type": "number", "exclusiveMinimum": 0},
+        "weight": {"type": "number", "minimum": 0},
         "target": {"$ref": "#/$defs/identifier"}
       }
     },

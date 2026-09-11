@@ -42,7 +42,9 @@ pub(crate) fn execution_error(py: Python<'_>, failure: ExecutionFailure) -> PyEr
     match failure {
         ExecutionFailure::Mapping(failure) => mapping_error(py, &failure),
         ExecutionFailure::Routing(failure) => routing_selection_error(py, &failure),
-        ExecutionFailure::AlreadyStarted | ExecutionFailure::UnknownTicket => {
+        ExecutionFailure::AlreadyStarted
+        | ExecutionFailure::UnknownTicket
+        | ExecutionFailure::InvalidCompiledGraph { .. } => {
             PyRuntimeError::new_err(failure.to_string())
         }
     }

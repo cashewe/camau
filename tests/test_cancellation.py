@@ -91,3 +91,114 @@ async def test_task_suppressing_cancellation_delays_failure_until_it_finishes():
         await Router(fanout_spec(), {"left": fails, "right": suppresses}).run({})
     assert caught.value is failure
     assert finished.is_set()
+
+
+@pytest.mark.asyncio
+async def test_shared_future_resumes_every_ticket():
+    async def resolve():
+        await asyncio.sleep(0)
+        return {"shared": True}
+
+    shared = resolve()
+
+    def returns_shared(_payload):
+        return shared
+
+    result = await Router(
+        fanout_spec(),
+        {"left": returns_shared, "right": returns_shared},
+    ).run({})
+
+    assert result == {
+        "first": {"shared": True},
+        "second": {"shared": True},
+    }
+
+
+@pytest.mark.asyncio
+async def test_shared_future_failure_propagates_once_without_lost_cleanup():
+    failure = RuntimeError("shared failure")
+    shared = asyncio.get_running_loop().create_future()
+    shared.set_exception(failure)
+
+    def returns_shared(_payload):
+        return shared
+
+    with pytest.raises(RuntimeError) as caught:
+        await Router(
+            fanout_spec(),
+            {"left": returns_shared, "right": returns_shared},
+        ).run({})
+
+    assert caught.value is failure
+
+
+@pytest.mark.asyncio
+async def test_cancelling_shared_future_consumers_cancels_the_future_once():
+    class CountingFuture(asyncio.Future):
+        def __init__(self):
+            super().__init__()
+            self.cancel_calls = 0
+
+        def cancel(self, msg=None):
+            self.cancel_calls += 1
+            return super().cancel(msg)
+
+    shared = CountingFuture()
+
+    def returns_shared(_payload):
+        return shared
+
+    run = asyncio.create_task(
+        Router(
+            fanout_spec(),
+            {"left": returns_shared, "right": returns_shared},
+        ).run({})
+    )
+    await asyncio.sleep(0)
+    run.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await run
+    assert shared.cancelled()
+    assert shared.cancel_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_shared_future_supports_three_consumers():
+    specification = {
+        "entry": "fan",
+        "output": "join",
+        "nodes": [
+            {
+                "id": "fan",
+                "type": "fan-out",
+                "branches": [
+                    {"id": "a", "target": "a-task"},
+                    {"id": "b", "target": "b-task"},
+                    {"id": "c", "target": "c-task"},
+                ],
+            },
+            {"id": "a-task", "type": "task", "task": "shared", "next": "join"},
+            {"id": "b-task", "type": "task", "task": "shared", "next": "join"},
+            {"id": "c-task", "type": "task", "task": "shared", "next": "join"},
+            {
+                "id": "join",
+                "type": "converge",
+                "inputs": {"a": "a-task", "b": "b-task", "c": "c-task"},
+            },
+        ],
+    }
+    shared = asyncio.get_running_loop().create_future()
+    shared.set_result({"value": 1})
+
+    def returns_shared(_payload):
+        return shared
+
+    result = await Router(specification, {"shared": returns_shared}).run({})
+
+    assert result == {
+        "a": {"value": 1},
+        "b": {"value": 1},
+        "c": {"value": 1},
+    }

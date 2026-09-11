@@ -1,4 +1,5 @@
 use super::text;
+use crate::json_pointer::join_pointer;
 use crate::json_value::JsonValue;
 use indexmap::IndexMap;
 
@@ -62,6 +63,26 @@ pub(super) fn outgoing_references(
         _ => {}
     }
     references
+}
+
+pub(super) fn convergence_sources(
+    node: &IndexMap<String, JsonValue>,
+    index: usize,
+) -> Vec<(String, String)> {
+    if text(node, "type") != Some("converge") {
+        return Vec::new();
+    }
+    node.get("inputs")
+        .and_then(JsonValue::object)
+        .into_iter()
+        .flatten()
+        .filter_map(|(flow_id, source)| {
+            Some((
+                source.string()?.to_owned(),
+                join_pointer(&format!("/nodes/{index}/inputs"), flow_id),
+            ))
+        })
+        .collect()
 }
 
 pub(super) fn reachable_from(entry: usize, edges: &[Vec<usize>]) -> Vec<bool> {

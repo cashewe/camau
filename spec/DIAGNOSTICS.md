@@ -33,7 +33,7 @@ Assessment diagnostics are a stable, machine-readable contract within a package 
 | `GATE_CASE` | A deterministic case has invalid operator-specific values or ordering. |
 | `GATE_OTHERWISE` | `otherwise` is absent, repeated, or not the final case. |
 | `GATE_OVERLAP` | Two deterministic cases have a statically provable overlap. |
-| `RANDOM_WEIGHT` | A randomised route weight is non-positive, non-finite, or otherwise invalid. |
+| `RANDOM_WEIGHT` | A randomised route weight is negative or non-finite, or every route weight is zero. |
 | `RANDOM_TARGET` | A randomised gate repeats a target. |
 | `TASK_MISSING` | Router construction cannot find a referenced logical task in its registry. |
 | `TASK_NOT_CALLABLE` | Router construction finds a referenced registry value that is not callable. |

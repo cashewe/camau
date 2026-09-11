@@ -165,12 +165,29 @@ impl Execution {
                 });
             }
             NodeKind::Randomised { routes, total } => {
+                if !total.is_finite()
+                    || total <= 0.0
+                    || routes
+                        .iter()
+                        .any(|route| !route.weight.is_finite() || route.weight < 0.0)
+                {
+                    return Err(ExecutionFailure::InvalidCompiledGraph {
+                        node_id: node.id,
+                        reason: "randomised distribution contains invalid weights",
+                    });
+                }
+                let Some(fallback) = routes.iter().rfind(|route| route.weight > 0.0) else {
+                    return Err(ExecutionFailure::InvalidCompiledGraph {
+                        node_id: node.id,
+                        reason: "randomised distribution has no positive route",
+                    });
+                };
                 let mut sample = self
                     .rng
                     .lock()
                     .expect("random generator lock poisoned")
                     .random_range(0.0..total);
-                let mut target = routes.last().expect("validated random routes").target;
+                let mut target = fallback.target;
                 for route in &routes {
                     if sample < route.weight {
                         target = route.target;

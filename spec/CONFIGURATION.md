@@ -179,7 +179,7 @@ A deterministic-gate may be `entry` but not `output`.
 }
 ```
 
-At least two routes are required. Each weight is positive and finite; weights need not sum to one because the router normalizes them. Targets are unique. The chosen target receives the current object unchanged.
+At least two routes are required. Each weight is non-negative and finite, and at least one route must have a positive weight. Weights need not sum to one because the router normalizes them. Targets are unique. The chosen target receives the current object unchanged.
 
 Sampling occurs independently each time the node executes. An optional router seed controls a serial pseudo-random sequence for tests but does not provide stable per-entity allocation or deterministic concurrent execution.
 

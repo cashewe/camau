@@ -37,6 +37,11 @@ pub enum ExecutionFailure {
     AlreadyStarted,
     #[error("unknown or completed task ticket")]
     UnknownTicket,
+    #[error("compiled graph invariant failed at node {node_id:?} ({reason})")]
+    InvalidCompiledGraph {
+        node_id: String,
+        reason: &'static str,
+    },
 }
 
 impl From<RoutingFailure> for ExecutionFailure {

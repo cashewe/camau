@@ -41,8 +41,16 @@ impl Router {
         if !assessment.data.issues.is_empty() {
             return Err(configuration_error(py, assessment)?);
         }
-        let value = value.expect("valid assessment has a parsed specification");
-        let graph = compile(&value).expect("valid assessment compiles");
+        let value = value.ok_or_else(|| {
+            pyo3::exceptions::PyRuntimeError::new_err(
+                "assessed routing specification has no parsed value",
+            )
+        })?;
+        let graph = compile(&value).ok_or_else(|| {
+            pyo3::exceptions::PyRuntimeError::new_err(
+                "assessed routing specification could not be compiled",
+            )
+        })?;
         let mut resolved = HashMap::new();
         for node in &graph.nodes {
             let NodeKind::Task { task, .. } = &node.kind else {
