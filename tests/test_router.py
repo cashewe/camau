@@ -1,10 +1,28 @@
 import asyncio
 import math
+from collections.abc import Iterator, Mapping
 
 import pytest
 
 from camau import ConfigurationError, Router, TaskResultError
 from tests.support.specifications import task_spec
+
+
+class StatefulTasks(Mapping[str, object]):
+    def __init__(self, entries):
+        self.entries = entries
+        self.lookups = []
+
+    def __getitem__(self, key):
+        self.lookups.append(key)
+        values = self.entries[key]
+        return values[min(self.lookups.count(key) - 1, len(values) - 1)]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.entries)
+
+    def __len__(self) -> int:
+        return len(self.entries)
 
 
 @pytest.mark.asyncio
@@ -49,6 +67,76 @@ def test_task_binding_is_eager_but_does_not_invoke():
     with pytest.raises(ConfigurationError) as invalid:
         Router(task_spec(), {"echo": 1})
     assert invalid.value.assessment.issues[0].code == "TASK_NOT_CALLABLE"
+
+
+def test_router_state_cannot_be_reassigned_deleted_or_reinitialized():
+    async def echo(payload):
+        return payload
+
+    router = Router(task_spec(), {"echo": echo})
+
+    with pytest.raises(AttributeError):
+        router._inner = router._inner
+    with pytest.raises(AttributeError):
+        del router._inner
+    with pytest.raises(AttributeError):
+        router.__init__(task_spec(), {"echo": echo})
+
+
+def test_failed_construction_does_not_initialize_router_state():
+    router = Router.__new__(Router)
+
+    with pytest.raises(ConfigurationError):
+        router.__init__(task_spec(), {})
+
+    assert not hasattr(router, "_inner")
+
+
+@pytest.mark.asyncio
+async def test_each_unique_task_is_resolved_once_and_reused_for_every_node():
+    async def first(payload):
+        return {"calls": [*payload.get("calls", []), "first"]}
+
+    async def second(payload):
+        return {"calls": [*payload.get("calls", []), "second"]}
+
+    specification = {
+        "entry": "first",
+        "output": "second",
+        "nodes": [
+            {"id": "first", "type": "task", "task": "shared", "next": "second"},
+            {"id": "second", "type": "task", "task": "shared"},
+        ],
+    }
+    tasks = StatefulTasks({"shared": [first, second]})
+
+    router = Router(specification, tasks)
+
+    assert tasks.lookups == ["shared"]
+    assert await router.run({}) == {"calls": ["first", "first"]}
+
+
+def test_unique_invalid_task_entries_are_resolved_once_with_node_paths():
+    specification = {
+        "entry": "first",
+        "output": "third",
+        "nodes": [
+            {"id": "first", "type": "task", "task": "missing", "next": "second"},
+            {"id": "second", "type": "task", "task": "invalid", "next": "third"},
+            {"id": "third", "type": "task", "task": "missing"},
+        ],
+    }
+    tasks = StatefulTasks({"invalid": [object()]})
+
+    with pytest.raises(ConfigurationError) as caught:
+        Router(specification, tasks)
+
+    assert tasks.lookups == ["missing", "invalid"]
+    assert [(issue.code, issue.path) for issue in caught.value.assessment.issues] == [
+        ("TASK_MISSING", "/nodes/0/task"),
+        ("TASK_NOT_CALLABLE", "/nodes/1/task"),
+        ("TASK_MISSING", "/nodes/2/task"),
+    ]
 
 
 @pytest.mark.asyncio

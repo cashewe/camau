@@ -19,7 +19,15 @@ class Router:
         *,
         seed: int | None = None,
     ) -> None:
+        if hasattr(self, "_inner"):
+            raise AttributeError("Router instances are immutable")
         object.__setattr__(self, "_inner", _Router(specification, tasks, seed=seed))
+
+    def __setattr__(self, name: str, value: object) -> None:
+        raise AttributeError("Router instances are immutable")
+
+    def __delattr__(self, name: str) -> None:
+        raise AttributeError("Router instances are immutable")
 
     async def run(self, payload: JsonObject) -> JsonObject:
         execution = self._inner.new_run(payload)

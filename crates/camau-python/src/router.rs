@@ -20,6 +20,12 @@ pub(crate) struct Router {
     rng: SharedRng,
 }
 
+enum TaskResolution {
+    Bound(Py<PyAny>),
+    Missing,
+    NotCallable,
+}
+
 #[pymethods]
 impl Router {
     #[new]
@@ -37,29 +43,45 @@ impl Router {
         }
         let value = value.expect("valid assessment has a parsed specification");
         let graph = compile(&value).expect("valid assessment compiles");
+        let mut resolved = HashMap::new();
+        for node in &graph.nodes {
+            let NodeKind::Task { task, .. } = &node.kind else {
+                continue;
+            };
+            if resolved.contains_key(task) {
+                continue;
+            }
+            let resolution = match tasks.get_item(task) {
+                Ok(value) if value.is_callable() => TaskResolution::Bound(value.unbind()),
+                Ok(_) => TaskResolution::NotCallable,
+                Err(error) if error.is_instance_of::<pyo3::exceptions::PyKeyError>(py) => {
+                    TaskResolution::Missing
+                }
+                Err(error) => return Err(error),
+            };
+            resolved.insert(task.clone(), resolution);
+        }
+
         let mut bindings = HashMap::new();
         let mut binding_issues = Vec::new();
         for (index, node) in graph.nodes.iter().enumerate() {
             let NodeKind::Task { task, .. } = &node.kind else {
                 continue;
             };
-            match tasks.get_item(task) {
-                Ok(value) if value.is_callable() => {
-                    bindings.insert(index, value.unbind());
+            match resolved.get(task).expect("every task name was resolved") {
+                TaskResolution::Bound(value) => {
+                    bindings.insert(index, value.clone_ref(py));
                 }
-                Ok(_) => binding_issues.push(IssueData::new(
+                TaskResolution::NotCallable => binding_issues.push(IssueData::new(
                     "TASK_NOT_CALLABLE",
                     format!("/nodes/{index}/task"),
                     format!("registered task {task:?} is not callable"),
                 )),
-                Err(error) if error.is_instance_of::<pyo3::exceptions::PyKeyError>(py) => {
-                    binding_issues.push(IssueData::new(
-                        "TASK_MISSING",
-                        format!("/nodes/{index}/task"),
-                        format!("registered task {task:?} is missing"),
-                    ));
-                }
-                Err(error) => return Err(error),
+                TaskResolution::Missing => binding_issues.push(IssueData::new(
+                    "TASK_MISSING",
+                    format!("/nodes/{index}/task"),
+                    format!("registered task {task:?} is missing"),
+                )),
             }
         }
         if !binding_issues.is_empty() {
