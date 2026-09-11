@@ -112,3 +112,62 @@ async def test_randomised_gate_handles_extreme_and_zero_weights():
     assert set(await routes((1e308, 1e308), 100)) == {"left", "right"}
     assert await routes((0, 1e308), 20) == ["right"] * 20
     assert await routes((1e-300, 1e308), 20) == ["right"] * 20
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("token", ["", "+0", "+1", "01", "-0", "-1", "18446744073709551616"])
+async def test_gate_array_indexes_require_canonical_decimal_tokens(token):
+    specification = {
+        "entry": "gate",
+        "output": "done",
+        "nodes": [
+            {
+                "id": "gate",
+                "type": "deterministic-gate",
+                "select": f"/values/{token}",
+                "cases": [
+                    {"operator": "eq", "value": "matched", "target": "done"},
+                    {"operator": "otherwise", "target": "unmatched"},
+                ],
+            },
+            {"id": "done", "type": "task", "task": "done"},
+            {"id": "unmatched", "type": "raise-error", "message": "unmatched"},
+        ],
+    }
+
+    async def done(payload):
+        return payload
+
+    router = Router(specification, {"done": done})
+    with pytest.raises(RoutingSelectionError):
+        await router.run({"values": ["matched", "matched"]})
+    assert await router.run({"values": {token: "matched"}}) == {
+        "values": {token: "matched"}
+    }
+
+
+@pytest.mark.asyncio
+async def test_canonical_gate_array_indexes_resolve():
+    specification = {
+        "entry": "gate",
+        "output": "done",
+        "nodes": [
+            {
+                "id": "gate",
+                "type": "deterministic-gate",
+                "select": "/values~1escaped/1",
+                "cases": [
+                    {"operator": "eq", "value": "matched", "target": "done"},
+                    {"operator": "otherwise", "target": "unmatched"},
+                ],
+            },
+            {"id": "done", "type": "task", "task": "done"},
+            {"id": "unmatched", "type": "raise-error", "message": "unmatched"},
+        ],
+    }
+
+    async def done(payload):
+        return payload
+
+    payload = {"values/escaped": ["skip", "matched"]}
+    assert await Router(specification, {"done": done}).run(payload) == payload

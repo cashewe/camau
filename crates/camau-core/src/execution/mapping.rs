@@ -1,7 +1,7 @@
 use indexmap::IndexMap;
 
 use crate::graph::Mapping;
-use crate::json_pointer::unescape_pointer_token;
+use crate::json_pointer::JsonPointer;
 use crate::json_value::JsonValue;
 
 use super::MappingFailure;
@@ -15,7 +15,7 @@ pub(super) fn apply_mappings(
     for mapping in mappings {
         let value = match mapping
             .source
-            .as_deref()
+            .as_ref()
             .and_then(|source| input.pointer(source))
         {
             Some(value) => value.clone(),
@@ -24,8 +24,11 @@ pub(super) fn apply_mappings(
                 None => {
                     return Err(MappingFailure {
                         node_id: node_id.to_owned(),
-                        target: mapping.target.clone(),
-                        source_path: mapping.source.clone(),
+                        target: mapping.target.as_str().to_owned(),
+                        source_path: mapping
+                            .source
+                            .as_ref()
+                            .map(|source| source.as_str().to_owned()),
                         expected_type: mapping.value_type.name(),
                         reason: "source_missing",
                     });
@@ -35,8 +38,11 @@ pub(super) fn apply_mappings(
         if !mapping.value_type.matches(&value) {
             return Err(MappingFailure {
                 node_id: node_id.to_owned(),
-                target: mapping.target.clone(),
-                source_path: mapping.source.clone(),
+                target: mapping.target.as_str().to_owned(),
+                source_path: mapping
+                    .source
+                    .as_ref()
+                    .map(|source| source.as_str().to_owned()),
                 expected_type: mapping.value_type.name(),
                 reason: "type_mismatch",
             });
@@ -46,21 +52,17 @@ pub(super) fn apply_mappings(
     Ok(JsonValue::Object(output))
 }
 
-fn insert_target(root: &mut IndexMap<String, JsonValue>, pointer: &str, value: JsonValue) {
-    let tokens: Vec<String> = pointer
-        .split('/')
-        .skip(1)
-        .map(|token| unescape_pointer_token(token).unwrap().into_owned())
-        .collect();
+fn insert_target(root: &mut IndexMap<String, JsonValue>, pointer: &JsonPointer, value: JsonValue) {
+    let tokens = pointer.tokens();
     let mut current = root;
     for token in &tokens[..tokens.len() - 1] {
         let entry = current
-            .entry(token.clone())
+            .entry(token.key().to_owned())
             .or_insert_with(|| JsonValue::Object(IndexMap::new()));
         current = match entry {
             JsonValue::Object(object) => object,
             _ => unreachable!("mapping target conflicts are assessed"),
         };
     }
-    current.insert(tokens.last().unwrap().clone(), value);
+    current.insert(tokens.last().unwrap().key().to_owned(), value);
 }

@@ -288,7 +288,7 @@ fn node_description(graph: &CompiledGraph, kind: &NodeKind) -> String {
         ),
         NodeKind::Deterministic { select, .. } => format!(
             "Reads {} and follows the first matching labelled route.",
-            markdown_code(select)
+            markdown_code(select.as_str())
         ),
         NodeKind::Randomised { .. } => {
             "Chooses one labelled route using the normalised weights.".to_owned()
@@ -319,16 +319,16 @@ fn mapping_description(mapping: &Mapping) -> String {
     let value = match (&mapping.source, &mapping.default) {
         (Some(source), Some(default)) => format!(
             "{} or default {}",
-            markdown_code(source),
+            markdown_code(source.as_str()),
             markdown_code(&json_text(default))
         ),
-        (Some(source), None) => markdown_code(source),
+        (Some(source), None) => markdown_code(source.as_str()),
         (None, Some(default)) => format!("default {}", markdown_code(&json_text(default))),
         (None, None) => unreachable!("valid mappings have a source or default"),
     };
     format!(
         "{} &larr; {} ({})",
-        markdown_code(&mapping.target),
+        markdown_code(mapping.target.as_str()),
         value,
         value_type_label(mapping.value_type)
     )

@@ -157,7 +157,7 @@ impl Execution {
                     flows: token.flows,
                     gate: Some(GateSelectionContext {
                         gate_node_id: node.id,
-                        selected_path: Some(select),
+                        selected_path: Some(select.as_str().to_owned()),
                         value_found: Some(selected_value.is_some()),
                         selected_value,
                         matched_operator: Some(operator.to_owned()),

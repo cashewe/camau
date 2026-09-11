@@ -1,3 +1,4 @@
+use crate::json_pointer::JsonPointer;
 use crate::json_value::JsonValue;
 
 #[derive(Clone)]
@@ -24,7 +25,7 @@ pub enum NodeKind {
         next: Option<usize>,
     },
     Deterministic {
-        select: String,
+        select: JsonPointer,
         cases: Vec<GateCase>,
     },
     Randomised {
@@ -45,8 +46,8 @@ pub enum NodeKind {
 
 #[derive(Clone)]
 pub struct Mapping {
-    pub target: String,
-    pub source: Option<String>,
+    pub target: JsonPointer,
+    pub source: Option<JsonPointer>,
     pub default: Option<JsonValue>,
     pub value_type: ValueType,
 }

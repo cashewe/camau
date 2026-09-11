@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::json_pointer::JsonPointer;
 use crate::json_value::JsonValue;
 use indexmap::IndexMap;
 
@@ -35,7 +36,7 @@ pub fn compile(value: &JsonValue) -> Option<CompiledGraph> {
                 next: reference(object, "next", &by_id),
             },
             "deterministic-gate" => NodeKind::Deterministic {
-                select: text(object, "select")?.to_owned(),
+                select: JsonPointer::parse(text(object, "select")?)?,
                 cases: object
                     .get("cases")?
                     .array()?
@@ -115,8 +116,11 @@ pub fn compile(value: &JsonValue) -> Option<CompiledGraph> {
 fn parse_mapping(value: &JsonValue) -> Option<Mapping> {
     let mapping = value.object()?;
     Some(Mapping {
-        target: text(mapping, "target")?.to_owned(),
-        source: text(mapping, "path-to-source").map(str::to_owned),
+        target: JsonPointer::parse(text(mapping, "target")?)?,
+        source: match text(mapping, "path-to-source") {
+            Some(source) => Some(JsonPointer::parse(source)?),
+            None => None,
+        },
         default: mapping.get("default").cloned(),
         value_type: ValueType::parse(text(mapping, "type")?)?,
     })
