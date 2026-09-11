@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::collections::HashSet;
 
 use crate::diagnostics::IssueData;
-use crate::json_value::JsonValue;
+use crate::json_parsing::JsonValue;
 
 use super::{validate_identifier_field, validate_properties};
 use crate::graph::{compare_numbers, json_number};

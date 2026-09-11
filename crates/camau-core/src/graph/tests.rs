@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 
 use super::*;
-use crate::json_parser::parse_json;
+use crate::json_parsing::parse_json;
 use proptest::prelude::*;
 
 #[test]

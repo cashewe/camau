@@ -1,7 +1,6 @@
 use crate::diagnostics::{AssessmentData, IssueData};
 use crate::graph;
-use crate::json_parser::parse_json;
-use crate::json_value::JsonValue;
+use crate::json_parsing::{JsonValue, parse_json};
 
 pub fn assess_json(source: &str) -> (Option<JsonValue>, AssessmentData) {
     let (value, problems) = parse_json(source);

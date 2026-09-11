@@ -5,8 +5,7 @@ mod node;
 use indexmap::IndexMap;
 
 use crate::diagnostics::IssueData;
-use crate::json_pointer::{join_pointer, valid_identifier, valid_pointer};
-use crate::json_value::JsonValue;
+use crate::json_parsing::{JsonValue, join_pointer, valid_identifier, valid_pointer};
 
 pub(super) fn validate_structure(value: &JsonValue, issues: &mut Vec<IssueData>) {
     let Some(root) = value.object() else {

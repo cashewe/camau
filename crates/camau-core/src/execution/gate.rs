@@ -1,5 +1,5 @@
 use crate::graph::{GateCase, JsonNumber, compare_numbers, json_number};
-use crate::json_value::JsonValue;
+use crate::json_parsing::JsonValue;
 
 pub(super) fn select_case(
     selected: Option<&JsonValue>,

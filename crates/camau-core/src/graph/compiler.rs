@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use crate::json_pointer::JsonPointer;
-use crate::json_value::JsonValue;
+use crate::json_parsing::{JsonPointer, JsonValue};
 use indexmap::IndexMap;
 
 use super::{

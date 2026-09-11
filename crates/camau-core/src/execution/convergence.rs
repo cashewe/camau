@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use indexmap::IndexMap;
 
 use crate::graph::ConvergeInput;
-use crate::json_value::JsonValue;
+use crate::json_parsing::JsonValue;
 
 struct Arrival {
     value: JsonValue,

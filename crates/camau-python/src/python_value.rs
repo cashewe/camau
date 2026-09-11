@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 
-use camau_core::json_pointer::join_pointer;
-use camau_core::json_value::JsonValue;
+use camau_core::json_parsing::{JsonValue, join_pointer};
 use pyo3::IntoPyObjectExt;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;

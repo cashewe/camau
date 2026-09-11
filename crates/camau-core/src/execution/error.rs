@@ -1,4 +1,4 @@
-use crate::json_value::JsonValue;
+use crate::json_parsing::JsonValue;
 
 #[derive(Debug, thiserror::Error)]
 #[error("mapping at node {node_id:?} could not produce target {target:?} ({reason})")]

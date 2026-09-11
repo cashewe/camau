@@ -1,5 +1,4 @@
-use crate::json_pointer::JsonPointer;
-use crate::json_value::JsonValue;
+use crate::json_parsing::{JsonPointer, JsonValue};
 
 #[derive(Clone)]
 pub struct CompiledGraph {

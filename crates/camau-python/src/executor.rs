@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use camau_core::execution::{Execution as CoreExecution, Progress as CoreProgress, SharedRng};
 use camau_core::graph::CompiledGraph;
-use camau_core::json_value::JsonValue;
+use camau_core::json_parsing::JsonValue;
 use pyo3::prelude::*;
 
 use crate::errors::{execution_error, task_result_error};

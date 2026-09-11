@@ -3,6 +3,4 @@ pub mod diagnostics;
 pub mod diagram;
 pub mod execution;
 pub mod graph;
-pub mod json_parser;
-pub mod json_pointer;
-pub mod json_value;
+pub mod json_parsing;

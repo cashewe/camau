@@ -4,7 +4,7 @@ use std::fmt::Write as _;
 use crate::graph::{
     CompiledGraph, GateCase, JsonNumber, Mapping, NodeKind, ValueType, WeightedRoute,
 };
-use crate::json_value::JsonValue;
+use crate::json_parsing::JsonValue;
 
 #[derive(Clone, Copy)]
 enum EdgeKind {

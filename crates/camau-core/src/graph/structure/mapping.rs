@@ -1,5 +1,5 @@
 use crate::diagnostics::IssueData;
-use crate::json_value::JsonValue;
+use crate::json_parsing::JsonValue;
 
 use super::{validate_pointer_field, validate_properties};
 use crate::graph::ValueType;

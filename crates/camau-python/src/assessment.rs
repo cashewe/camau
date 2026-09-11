@@ -1,8 +1,7 @@
 use camau_core::assessment::assess_json;
 use camau_core::diagnostics::IssueData;
 use camau_core::graph;
-use camau_core::json_parser::parse_json;
-use camau_core::json_value::JsonValue;
+use camau_core::json_parsing::{JsonValue, parse_json};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyString};
 

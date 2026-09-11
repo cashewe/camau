@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
 use crate::graph::{CompiledGraph, Node, NodeKind, compile};
-use crate::json_parser::parse_json;
-use crate::json_value::JsonValue;
+use crate::json_parsing::{JsonValue, parse_json};
 
 use super::{Execution, ExecutionFailure, seeded_rng};
 

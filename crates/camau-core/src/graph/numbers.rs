@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 
 use super::{JsonNumber, ValueType};
-use crate::json_value::JsonValue;
+use crate::json_parsing::JsonValue;
 
 impl ValueType {
     pub(crate) fn parse(value: &str) -> Option<Self> {

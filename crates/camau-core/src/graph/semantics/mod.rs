@@ -6,8 +6,7 @@ mod mapping_validation;
 use std::collections::HashMap;
 
 use crate::diagnostics::IssueData;
-use crate::json_pointer::valid_identifier;
-use crate::json_value::JsonValue;
+use crate::json_parsing::{JsonValue, valid_identifier};
 
 use super::algorithms::{
     can_reach_terminal, convergence_sources, outgoing_references, reachable_from,

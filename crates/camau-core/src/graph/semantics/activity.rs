@@ -1,8 +1,7 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use crate::diagnostics::IssueData;
-use crate::json_pointer::join_pointer;
-use crate::json_value::JsonValue;
+use crate::json_parsing::{JsonValue, join_pointer};
 use indexmap::IndexMap;
 
 use super::super::algorithms::reachable_from;
@@ -362,8 +361,7 @@ mod tests {
 
     use crate::diagnostics::IssueData;
     use crate::graph::{algorithms::outgoing_references, text};
-    use crate::json_parser::parse_json;
-    use crate::json_value::JsonValue;
+    use crate::json_parsing::{JsonValue, parse_json};
 
     use super::validate_activity;
 

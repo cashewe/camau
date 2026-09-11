@@ -8,7 +8,7 @@ mod structure;
 use indexmap::IndexMap;
 
 use crate::diagnostics::IssueData;
-use crate::json_value::JsonValue;
+use crate::json_parsing::JsonValue;
 
 pub use compiler::compile;
 pub use model::{

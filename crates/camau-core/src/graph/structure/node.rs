@@ -1,8 +1,7 @@
 use std::collections::HashSet;
 
 use crate::diagnostics::IssueData;
-use crate::json_pointer::join_pointer;
-use crate::json_value::JsonValue;
+use crate::json_parsing::{JsonValue, join_pointer};
 
 use super::gate::{validate_case, validate_otherwise};
 use super::mapping::validate_mapping;

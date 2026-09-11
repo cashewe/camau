@@ -1,2 +1,8 @@
 {
+    "files.watcherExclude": {
+        "**/.tmp/**": true
+    },
+    "rust-analyzer.files.exclude": [
+        ".tmp"
+    ]
 }

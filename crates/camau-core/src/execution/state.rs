@@ -4,7 +4,7 @@ use std::sync::Arc;
 use rand::RngExt;
 
 use crate::graph::{CompiledGraph, NodeKind};
-use crate::json_value::JsonValue;
+use crate::json_parsing::JsonValue;
 
 use super::convergence::Convergences;
 use super::error::{ExecutionFailure, GateSelectionContext, RoutingFailure};

@@ -5,8 +5,7 @@ use std::fmt;
 use indexmap::IndexMap;
 use serde::de::{DeserializeSeed, MapAccess, SeqAccess, Visitor};
 
-use crate::json_pointer::join_pointer;
-use crate::json_value::JsonValue;
+use super::{JsonValue, join_pointer};
 
 #[derive(Clone, Debug, thiserror::Error)]
 #[error("{message} at {path}")]

@@ -1,8 +1,7 @@
 use indexmap::IndexMap;
 
 use crate::graph::Mapping;
-use crate::json_pointer::JsonPointer;
-use crate::json_value::JsonValue;
+use crate::json_parsing::{JsonPointer, JsonValue};
 
 use super::MappingFailure;
 

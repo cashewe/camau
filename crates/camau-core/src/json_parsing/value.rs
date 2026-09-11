@@ -1,6 +1,6 @@
 use indexmap::IndexMap;
 
-use crate::json_pointer::JsonPointer;
+use super::JsonPointer;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum JsonValue {
@@ -50,8 +50,8 @@ impl JsonValue {
 
 #[cfg(test)]
 mod tests {
+    use super::super::JsonPointer;
     use super::JsonValue;
-    use crate::json_pointer::JsonPointer;
     use indexmap::IndexMap;
 
     #[test]

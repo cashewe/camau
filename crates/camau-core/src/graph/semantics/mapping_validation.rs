@@ -1,5 +1,5 @@
 use crate::diagnostics::IssueData;
-use crate::json_value::JsonValue;
+use crate::json_parsing::JsonValue;
 use indexmap::IndexMap;
 
 pub(super) fn validate_mapping_targets(
