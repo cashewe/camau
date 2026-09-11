@@ -141,9 +141,7 @@ async def test_gate_array_indexes_require_canonical_decimal_tokens(token):
     router = Router(specification, {"done": done})
     with pytest.raises(RoutingSelectionError):
         await router.run({"values": ["matched", "matched"]})
-    assert await router.run({"values": {token: "matched"}}) == {
-        "values": {token: "matched"}
-    }
+    assert await router.run({"values": {token: "matched"}}) == {"values": {token: "matched"}}
 
 
 @pytest.mark.asyncio

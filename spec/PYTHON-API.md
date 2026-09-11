@@ -94,6 +94,7 @@ class Issue:
     message: str
     path: str
 
+
 @dataclass(frozen=True)
 class Assessment:
     issues: tuple[Issue, ...]
