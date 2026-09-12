@@ -197,4 +197,4 @@ and visualisation examples above.
 
 ## AI use disclosure
 
-`camau` was built using an agentic ai harness, you can read about the process and my takeaways on [this blog](). future updates to the tool where appropriate will make less use of ai now that the initial experiment is complete.
+`camau` was built using an agentic ai harness, you can read about the process and my takeaways on [this blog](https://medium.com/@johnstokes_38682/testing-pococks-agentic-coding-skills-2f3d7b605bfa). future updates to the tool where appropriate will make less use of ai now that the initial experiment is complete.
