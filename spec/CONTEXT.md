@@ -21,8 +21,12 @@ One declared operation in a workflow graph. Every node has a globally unique nod
 _Avoid_: Step, task
 
 **Task**:
-A gateway-owned asynchronous callable bound to a stable logical task name. A task owns downstream integration behaviour and is invoked only by a task node.
+A gateway-owned registration bound to a stable logical task name. It contains an asynchronous callable and an optional health check, and owns downstream integration behaviour.
 _Avoid_: Endpoint, node
+
+**Task health check**:
+A gateway-owned asynchronous probe of the downstream resource used by a task. It reports availability independently of workflow execution.
+_Avoid_: Route health check, liveness check
 
 **Task node**:
 A node that invokes one registered task with the current object.

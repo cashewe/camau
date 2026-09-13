@@ -11,6 +11,7 @@ def test_public_exports_are_stable():
         "MappingError",
         "Router",
         "RoutingSelectionError",
+        "Task",
         "TaskResultError",
     ]
     assert {name for name in camau.__all__ if hasattr(camau, name)} == set(camau.__all__)

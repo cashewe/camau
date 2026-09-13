@@ -9,6 +9,7 @@ from ._camau import (
     TaskResultError,
 )
 from .router import Router
+from .task import Task
 
 __all__ = [
     "Assessment",
@@ -19,5 +20,6 @@ __all__ = [
     "MappingError",
     "Router",
     "RoutingSelectionError",
+    "Task",
     "TaskResultError",
 ]

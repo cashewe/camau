@@ -1,13 +1,13 @@
 # Solution
 
-`camau` is an immutable, Rust-backed workflow router exposed as a Python package. A gateway constructs a router once during service initialization by supplying a routing specification and a registry of asynchronous callables. Each request calls the compiled router with one JSON object and receives one new JSON object. The same wheel installs Rust-backed commands for assessing routing specification files in CI and rendering their workflow graphs as Markdown documentation.
+`camau` is an immutable, Rust-backed workflow router exposed as a Python package. A gateway constructs a router once during service initialization by supplying a routing specification and a registry of tasks. Each request calls the compiled router with one JSON object and receives one new JSON object. The same wheel installs Rust-backed commands for assessing routing specification files in CI and rendering their workflow graphs as Markdown documentation.
 
 See [CONFIGURATION.md](./CONFIGURATION.md) for the graph language, [PYTHON-API.md](./PYTHON-API.md) for the public interface and failures, [ACCEPTANCE.md](./ACCEPTANCE.md) for V1 completion criteria, and [CONTEXT.md](./CONTEXT.md) for canonical terminology.
 
 ## Lifecycle
 
 1. The gateway creates its transport clients and preconfigures authentication, timeouts, retries, and connection pools.
-2. It binds asynchronous callables using stable logical task names.
+2. It binds tasks using stable logical task names.
 3. `Router` assesses the supplied dictionary or JSON string, resolves every referenced task, and compiles an immutable graph.
 4. The gateway reuses that router for requests on one asyncio event loop.
 5. Each `run` converts the request into Rust-owned JSON, executes the graph, and returns a fresh Python dictionary.
@@ -16,9 +16,11 @@ Router construction performs no task calls and no file or network I/O.
 
 ## Task boundary
 
-A task is a gateway-owned callable that accepts one JSON object and returns an awaitable resolving to one JSON object. It may call HTTP, gRPC, a queue, a local model, or ordinary Python. A callable must check its own downstream outcome and raise an exception for failure; an error-shaped JSON object is otherwise a successful task result to `camau`.
+A task is a gateway-owned registration containing a callable that accepts one JSON object and returns an awaitable resolving to one JSON object. It may call HTTP, gRPC, a queue, a local model, or ordinary Python. A callable must check its own downstream outcome and raise an exception for failure; an error-shaped JSON object is otherwise a successful task result to `camau`.
 
-The package validates task presence and callability at router construction. It validates that invocation returns an awaitable and that the awaited result is a JSON object at runtime.
+The registration may also contain a zero-argument asynchronous health check for the task's downstream resource. The gateway owns its transport and failure policy; `Router.healthcheck` only invokes each unique referenced check concurrently and reports its boolean result. A missing health check defaults to `True`, and a direct callable remains supported as shorthand for a task with that default.
+
+The package validates task presence and callable callability at router construction. It validates that invocation returns an awaitable and that the awaited result is a JSON object at runtime.
 
 ## Data-flow semantics
 

@@ -10,6 +10,20 @@ JsonScalar: TypeAlias = str | int | float | bool | None
 JsonValue: TypeAlias = JsonScalar | list["JsonValue"] | dict[str, "JsonValue"]
 JsonObject: TypeAlias = dict[str, JsonValue]
 AsyncTask: TypeAlias = Callable[[JsonObject], Awaitable[JsonObject]]
+AsyncHealthcheck: TypeAlias = Callable[[], Awaitable[bool]]
+
+class Task:
+    def __init__(
+        self,
+        task: AsyncTask,
+        *,
+        healthcheck: AsyncHealthcheck | None = None,
+    ) -> None: ...
+
+    @property
+    def task(self) -> AsyncTask: ...
+
+    async def healthcheck(self) -> bool: ...
 ```
 
 All exposed result, issue, and exception metadata objects must be ordinary Python objects. Public collections described as immutable must be tuples or read-only mappings.
@@ -21,12 +35,14 @@ class Router:
     def __init__(
         self,
         specification: dict[str, JsonValue] | str,
-        tasks: Mapping[str, AsyncTask],
+        tasks: Mapping[str, AsyncTask | Task],
         *,
         seed: int | None = None,
     ) -> None: ...
 
     async def run(self, payload: JsonObject) -> JsonObject: ...
+
+    async def healthcheck(self) -> dict[str, bool]: ...
 ```
 
 Construction:
@@ -34,7 +50,7 @@ Construction:
 - accepts a Python dictionary or JSON string and performs no file I/O;
 - runs the same structural and semantic assessment exposed by `Assessor`;
 - raises `ConfigurationError` if assessment fails;
-- verifies that every referenced logical task name is present and callable, without invoking it;
+- verifies that every referenced logical task name is present and its task callable is callable, without invoking it;
 - permits unused registry entries without validating their values;
 - copies and freezes graph and registry state so the router cannot be reconfigured; and
 - accepts a non-boolean, non-negative integer seed no greater than `2**64 - 1`, or nondeterministic entropy when omitted.
@@ -46,6 +62,14 @@ Execution:
 - does not promise cross-thread or cross-event-loop safety;
 - returns no routing metadata and emits no logging or telemetry; and
 - does not mutate the caller's payload.
+
+Health checking:
+
+- invokes each unique referenced task health check once and concurrently;
+- returns one boolean per logical task name in first-reference order;
+- does not run the workflow or invoke task callables;
+- returns `True` for a direct callable or a `Task` without a health check; and
+- propagates health check exceptions and rejects non-awaitable or non-boolean results with `TypeError`.
 
 Passing a non-dictionary payload raises `TypeError`. A dictionary containing non-string keys, out-of-range integers, non-finite numbers, invalid Unicode, reference cycles, more than 128 nested containers, or values outside the JSON data model raises `ValueError` at the offending JSON Pointer. These are caller argument errors, not graph, task, or routing failures. The same cycle and depth limits produce a `JSON_VALUE` assessment issue for dictionary specifications and a `TaskResultError` with reason `invalid_json` for task results.
 
@@ -59,7 +83,7 @@ A task registry name is case-sensitive and matches `[A-Za-z][A-Za-z0-9._-]*`. Th
 
 ## Task invocation
 
-A registry value may be an `async def` function or any callable object that returns an awaitable. Router construction checks only that it is callable. Runtime behaviour is:
+A registry value may be a `Task`, an `async def` function, or any callable object that returns an awaitable. A direct callable is shorthand for `Task(callable)` and therefore has the default successful health check. Router construction checks only that the task callable is callable. Runtime behaviour is:
 
 1. Materialize an isolated Python dictionary from the current Rust-owned JSON object.
 2. Call the bound task with exactly that positional argument.
@@ -68,6 +92,8 @@ A registry value may be an `async def` function or any callable object that retu
 5. Convert the result immediately into Rust-owned JSON.
 
 The task owns transport, status checking, authentication, timeouts, retries, coercion, connection pooling, and task-specific observability. It must raise an exception for an unsuccessful downstream response. A returned error-shaped JSON object is a successful value to the router.
+
+The optional task health check owns the same integration concerns. It takes no arguments and returns an awaitable resolving to `True` when its downstream resource is available and `False` when it is unavailable. It should convert expected transport failures into `False`; unexpected exceptions propagate from `Router.healthcheck`.
 
 ## Assessor
 

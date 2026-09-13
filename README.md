@@ -85,7 +85,7 @@ to a small response object. Save it as `routing.json` to follow the examples.
 import asyncio
 from pathlib import Path
 
-from camau import Router
+from camau import Router, Task
 
 
 async def priority_handler(request):
@@ -96,10 +96,14 @@ async def standard_handler(request):
     return {**request, "handled-by": "standard"}
 
 
+async def priority_healthcheck():
+    return True
+
+
 router = Router(
     Path("routing.json").read_text(encoding="utf-8"),
     {
-        "priority-handler": priority_handler,
+        "priority-handler": Task(priority_handler, healthcheck=priority_healthcheck),
         "standard-handler": standard_handler,
     },
 )
@@ -108,6 +112,7 @@ router = Router(
 async def main():
     result = await router.run({"request": {"id": "req-42"}, "priority": "high"})
     print(result)
+    print(await router.healthcheck())
 
 
 asyncio.run(main())
@@ -115,7 +120,13 @@ asyncio.run(main())
 
 ```text
 {'request-id': 'req-42', 'handled-by': 'priority'}
+{'priority-handler': True, 'standard-handler': True}
 ```
+
+Health checks are gateway-owned async callables, so they can reuse the same configured clients as
+their tasks. Direct task callables and `Task` registrations without a health check report `True` by
+default. A readiness endpoint can return success only when every value from `router.healthcheck()`
+is true.
 
 The full Python interface, including exceptions and task result requirements, is
 defined in [the Python API specification](spec/PYTHON-API.md).

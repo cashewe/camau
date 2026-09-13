@@ -14,12 +14,13 @@ V1 is complete when every requirement below is met. The two multi-stage workflow
 
 ## Public API
 
-- `Router`, `Assessor`, `Assessment`, `Issue`, and the documented exception hierarchy match [PYTHON-API.md](./PYTHON-API.md).
+- `Router`, `Task`, `Assessor`, `Assessment`, `Issue`, and the documented exception hierarchy match [PYTHON-API.md](./PYTHON-API.md).
 - Router construction accepts a dictionary or JSON string, performs no task calls, and fails with the complete assessment when configuration or task binding is invalid.
 - Referenced missing and non-callable tasks produce `TASK_MISSING` and `TASK_NOT_CALLABLE`; invalid unused registry values are ignored.
 - A router is immutable after construction and overlapping runs on one event loop do not share execution state.
 - Mutating the source specification or registry mapping after construction does not change the router; mutable internal state owned by a bound callable is outside this guarantee.
 - `run` accepts and returns JSON objects, never mutates its input, and returns no route metadata.
+- `healthcheck` invokes every unique referenced task probe concurrently, reports one boolean per logical task, and defaults unconfigured probes to `True`.
 - The standalone assessor performs no file, task, or network access.
 - `pip install camau` installs `camau schema`, `camau assess <file> --format text|junit|github`, and `camau diagram <file>` without a separate package.
 - `camau diagram <file>` validates the routing specification and writes a self-contained Markdown document containing a Mermaid workflow graph and node details. Its legend and edge styles distinguish mutually exclusive routes, concurrently active branches, and sequential continuation.

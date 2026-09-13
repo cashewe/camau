@@ -2,32 +2,67 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
+from types import MappingProxyType
+from typing import TypeAlias
 
 from ._camau import _Router
+from .task import Task
 from .types import AsyncTask, JsonObject, JsonValue
+
+TaskRegistration: TypeAlias = AsyncTask | Task
+
+
+class _TaskRegistry(Mapping[str, AsyncTask]):
+    def __init__(self, tasks: Mapping[str, TaskRegistration]) -> None:
+        self._tasks = tasks
+        self.resolved: dict[str, Task] = {}
+
+    def __getitem__(self, name: str) -> AsyncTask:
+        value = self._tasks[name]
+        if isinstance(value, Task):
+            self.resolved[name] = value
+            return value.task
+        if callable(value):
+            self.resolved[name] = Task(value)
+        return value
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._tasks)
+
+    def __len__(self) -> int:
+        return len(self._tasks)
 
 
 class Router:
-    __slots__ = ("_inner",)
+    __slots__ = ("_inner", "_tasks")
     _inner: _Router
+    _tasks: Mapping[str, Task]
 
     def __init__(
         self,
         specification: dict[str, JsonValue] | str,
-        tasks: Mapping[str, AsyncTask],
+        tasks: Mapping[str, TaskRegistration],
         *,
         seed: int | None = None,
     ) -> None:
         if hasattr(self, "_inner"):
             raise AttributeError("Router instances are immutable")
-        object.__setattr__(self, "_inner", _Router(specification, tasks, seed=seed))
+        registry = _TaskRegistry(tasks)
+        inner = _Router(specification, registry, seed=seed)
+        object.__setattr__(self, "_inner", inner)
+        object.__setattr__(self, "_tasks", MappingProxyType(dict(registry.resolved)))
 
     def __setattr__(self, name: str, value: object) -> None:
         raise AttributeError("Router instances are immutable")
 
     def __delattr__(self, name: str) -> None:
         raise AttributeError("Router instances are immutable")
+
+    async def healthcheck(self) -> dict[str, bool]:
+        names = tuple(self._tasks)
+        results = await asyncio.gather(*(self._tasks[name].healthcheck() for name in names))
+        return dict(zip(names, results, strict=True))
 
     async def run(self, payload: JsonObject) -> JsonObject:
         execution = self._inner.new_run(payload)

@@ -6,7 +6,7 @@ The words **must**, **must not**, **should**, and **may** are normative.
 
 1. The public interface consists of Python objects and the Rust-backed `camau schema`, `camau assess`, and `camau diagram` commands. Router execution must be asynchronous; construction, assessment, schema access, report rendering, diagram rendering, and CLI execution are synchronous.
 2. Runtime-sensitive routing, mapping, graph execution, and JSON ownership must be implemented in Rust and packaged with maturin.
-3. The router must invoke gateway-supplied asynchronous callables. It must not own transport, authentication, retries, timeouts, coercion, connection pooling, or service discovery.
+3. The router must invoke gateway-supplied asynchronous task and health-check callables. It must not own transport, authentication, retries, timeouts, coercion, connection pooling, or service discovery.
 4. Router input, task input, task output, and router output must be JSON objects.
 5. Routing specifications must be accepted as a Python dictionary or JSON string by the library. Only CLI commands may load a specification file; neither interface reloads configuration.
 6. Configuration is trusted, version-controlled application configuration. It must not contain executable expressions, callbacks, credentials, or secrets.
