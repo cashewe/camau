@@ -42,6 +42,8 @@ class Router:
 
     async def run(self, payload: JsonObject) -> JsonObject: ...
 
+    async def explain(self, payload: JsonObject) -> dict[str, JsonValue]: ...
+
     async def healthcheck(self) -> dict[str, bool]: ...
 ```
 
@@ -60,8 +62,53 @@ Execution:
 - accepts only a JSON object and returns a new JSON object;
 - supports overlapping runs on one asyncio event loop without serializing them;
 - does not promise cross-thread or cross-event-loop safety;
-- returns no routing metadata and emits no logging or telemetry; and
+- `run` returns no routing metadata and emits no logging or telemetry; and
 - does not mutate the caller's payload.
+
+Explanation:
+
+- accepts the same payload contract as `run` and executes the same workflow, including task calls and randomised-gate sampling;
+- returns an ordinary JSON-compatible Python object containing deduplicated current-object snapshots, node visits, and one terminal outcome;
+- consumes the router's random sequence, so calling `explain` and then `run` performs two distinct executions;
+- returns a configured `raise-error` as a terminal `raise-error` outcome instead of raising `RoutingSelectionError`;
+- continues to propagate `MappingError`, `TaskResultError`, task exceptions, and `asyncio.CancelledError` with the same cancellation behaviour as `run`; and
+- may expose any payload field or task result, without redaction.
+
+An explanation has this shape:
+
+```json
+{
+  "objects": [
+    {"id": 0, "value": {"category": "premium"}}
+  ],
+  "visits": [
+    {
+      "node_id": "route-category",
+      "node_type": "deterministic-gate",
+      "reason": {"kind": "entry"},
+      "input_object_ids": [0],
+      "output_object_id": 0,
+      "status": "completed"
+    }
+  ],
+  "outcome": {"kind": "success", "output_object_id": 0}
+}
+```
+
+Object IDs are explanation-local non-negative integers. They identify immutable value snapshots, not Python object identity. Task, map-schema, and convergence results create new snapshots; deterministic gates, randomised gates, and fan-out reuse the unchanged snapshot. A convergence visit lists its input snapshot IDs in configured input order and its combined result as `output_object_id`.
+
+Every visit contains the node ID and configured node type, the reason it became active, its input snapshot IDs, and a status. A completed visit also contains its output snapshot ID. Reasons use these forms:
+
+- `entry` for the workflow entry;
+- `next` with `from_node` for sequential continuation;
+- `deterministic-gate` with the source gate, selected pointer, presence and value of the selected field, and the complete matched case;
+- `randomised-gate` with the source gate and normalized probability of the selected route;
+- `fan-out` with the source fan-out and flow ID; and
+- `convergence` with the configured flow IDs and source node IDs.
+
+Visit status is `completed`, `terminal`, or `abandoned`. `terminal` identifies the selected raise-error node. `abandoned` identifies a task node reached before that terminal outcome whose result is not applied because the execution is terminated. Visit order preserves causal processing order, but no order is promised between concurrently active siblings.
+
+A successful outcome has `kind == "success"` and `output_object_id`. A configured error outcome has `kind == "raise-error"`, `code == "GWALL"`, `node_id`, `message`, and `current_object_id`.
 
 Health checking:
 

@@ -1,5 +1,6 @@
 mod convergence;
 mod error;
+mod explanation;
 mod gate;
 mod mapping;
 mod random;

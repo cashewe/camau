@@ -128,6 +128,10 @@ their tasks. Direct task callables and `Task` registrations without a health che
 default. A readiness endpoint can return success only when every value from `router.healthcheck()`
 is true.
 
+`router.explain(payload)` is a debugging execution, not a dry run: it invokes tasks and consumes
+randomised routes just like `run`. It returns deduplicated current-object snapshots, the visited
+nodes and their routing reasons, and either a successful or configured `raise-error` outcome.
+
 The full Python interface, including exceptions and task result requirements, is
 defined in [the Python API specification](spec/PYTHON-API.md).
 

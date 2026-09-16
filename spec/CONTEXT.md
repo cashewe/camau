@@ -20,6 +20,10 @@ _Avoid_: Daisy chain, flow chart
 One declared operation in a workflow graph. Every node has a globally unique node ID and one of the built-in node types.
 _Avoid_: Step, task
 
+**Node visit**:
+One runtime encounter with a node during an explained execution. Concurrent active paths may produce node visits in an unspecified sibling order.
+_Avoid_: Step, log entry
+
 **Task**:
 A gateway-owned registration bound to a stable logical task name. It contains an asynchronous callable and an optional health check, and owns downstream integration behaviour.
 _Avoid_: Endpoint, node

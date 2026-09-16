@@ -20,6 +20,8 @@ V1 is complete when every requirement below is met. The two multi-stage workflow
 - A router is immutable after construction and overlapping runs on one event loop do not share execution state.
 - Mutating the source specification or registry mapping after construction does not change the router; mutable internal state owned by a bound callable is outside this guarantee.
 - `run` accepts and returns JSON objects, never mutates its input, and returns no route metadata.
+- `explain` accepts the same input contract, runs the same tasks and routing decisions, and returns JSON-compatible snapshot, node-visit, and outcome data without adding trace work to `run`.
+- A configured raise-error is a terminal explanation outcome; all operational failures retain the exception and cancellation behaviour of `run`.
 - `healthcheck` invokes every unique referenced task probe concurrently, reports one boolean per logical task, and defaults unconfigured probes to `True`.
 - The standalone assessor performs no file, task, or network access.
 - `pip install camau` installs `camau schema`, `camau assess <file> --format text|junit|github`, and `camau diagram <file>` without a separate package.
@@ -45,6 +47,7 @@ V1 is complete when every requirement below is met. The two multi-stage workflow
 - Fan-out proves all roots are scheduled before awaiting a result, carries isolated objects, and preserves configured convergence key order independent of completion order.
 - Converge waits for exactly its declared active inputs and produces the specified flow-ID-keyed object.
 - raise-error raises `RoutingSelectionError` with `code == "GWALL"` and cancels active siblings.
+- Explanation records deterministic matches, sampled random route probability, fan-out flow activation, convergence inputs, current-object transformations, and abandoned sibling task visits.
 
 ## Multi-stage workflow A: gated transformation
 

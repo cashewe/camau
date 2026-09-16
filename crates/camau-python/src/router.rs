@@ -103,7 +103,7 @@ impl Router {
     }
 
     fn new_run(&self, payload: &Bound<'_, PyAny>) -> PyResult<Execution> {
-        let payload = from_python(payload, true).map_err(|error| input_py_error(error, true))?;
+        let payload = parse_payload(payload)?;
         Ok(Execution::new(
             Arc::clone(&self.graph),
             Arc::clone(&self.tasks),
@@ -111,6 +111,20 @@ impl Router {
             payload,
         ))
     }
+
+    fn new_explanation(&self, payload: &Bound<'_, PyAny>) -> PyResult<Execution> {
+        let payload = parse_payload(payload)?;
+        Ok(Execution::explained(
+            Arc::clone(&self.graph),
+            Arc::clone(&self.tasks),
+            Arc::clone(&self.rng),
+            payload,
+        ))
+    }
+}
+
+fn parse_payload(payload: &Bound<'_, PyAny>) -> PyResult<camau_core::json_parsing::JsonValue> {
+    from_python(payload, true).map_err(|error| input_py_error(error, true))
 }
 
 fn parse_seed(seed: Option<&Bound<'_, PyAny>>) -> PyResult<Option<u64>> {

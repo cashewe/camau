@@ -4,8 +4,8 @@ use crate::json_parsing::JsonValue;
 pub(super) fn select_case(
     selected: Option<&JsonValue>,
     cases: &[GateCase],
-) -> (usize, &'static str) {
-    for case in cases {
+) -> (usize, usize, &'static str) {
+    for (index, case) in cases.iter().enumerate() {
         let matched = match case {
             GateCase::Eq { value, .. } => {
                 selected.is_some_and(|selected| json_equal(selected, value))
@@ -26,14 +26,14 @@ pub(super) fn select_case(
         };
         if matched {
             return match case {
-                GateCase::Eq { target, .. } => (*target, "eq"),
-                GateCase::Lt { target, .. } => (*target, "lt"),
-                GateCase::Le { target, .. } => (*target, "le"),
-                GateCase::Ge { target, .. } => (*target, "ge"),
-                GateCase::Gt { target, .. } => (*target, "gt"),
-                GateCase::Range { target, .. } => (*target, "in_range"),
-                GateCase::Set { target, .. } => (*target, "in_set"),
-                GateCase::Otherwise { target } => (*target, "otherwise"),
+                GateCase::Eq { target, .. } => (*target, index, "eq"),
+                GateCase::Lt { target, .. } => (*target, index, "lt"),
+                GateCase::Le { target, .. } => (*target, index, "le"),
+                GateCase::Ge { target, .. } => (*target, index, "ge"),
+                GateCase::Gt { target, .. } => (*target, index, "gt"),
+                GateCase::Range { target, .. } => (*target, index, "in_range"),
+                GateCase::Set { target, .. } => (*target, index, "in_set"),
+                GateCase::Otherwise { target } => (*target, index, "otherwise"),
             };
         }
     }

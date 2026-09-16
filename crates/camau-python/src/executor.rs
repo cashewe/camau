@@ -10,7 +10,7 @@ use crate::errors::{execution_error, task_result_error};
 use crate::python_value::{from_python, to_python};
 
 type TaskRequest = (u64, Py<PyAny>, Py<PyAny>);
-type Progress = (Vec<TaskRequest>, Option<Py<PyAny>>);
+type Progress = (Vec<TaskRequest>, Option<Py<PyAny>>, bool);
 
 #[pyclass(module = "camau._camau")]
 pub(crate) struct Execution {
@@ -28,6 +28,19 @@ impl Execution {
     ) -> Self {
         Self {
             inner: CoreExecution::new(Arc::clone(&graph), rng, payload),
+            graph,
+            tasks,
+        }
+    }
+
+    pub(crate) fn explained(
+        graph: Arc<CompiledGraph>,
+        tasks: Arc<HashMap<usize, Py<PyAny>>>,
+        rng: SharedRng,
+        payload: JsonValue,
+    ) -> Self {
+        Self {
+            inner: CoreExecution::explained(Arc::clone(&graph), rng, payload),
             graph,
             tasks,
         }
@@ -52,7 +65,7 @@ impl Execution {
             .as_ref()
             .map(|value| to_python(value, py))
             .transpose()?;
-        Ok((requests, output))
+        Ok((requests, output, progress.finished))
     }
 }
 
@@ -120,5 +133,14 @@ impl Execution {
             reason,
             Some(invalid_value),
         ))
+    }
+
+    fn take_explanation(&mut self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        let explanation = self.inner.take_explanation().ok_or_else(|| {
+            pyo3::exceptions::PyRuntimeError::new_err(
+                "explanation is unavailable before completion or has already been taken",
+            )
+        })?;
+        to_python(&explanation, py)
     }
 }

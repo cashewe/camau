@@ -8,11 +8,13 @@ use crate::json_parsing::JsonValue;
 struct Arrival {
     value: JsonValue,
     flows: Vec<String>,
+    object_id: Option<usize>,
 }
 
 pub(super) struct Converged {
     pub value: JsonValue,
     pub flows: Vec<String>,
+    pub input_object_ids: Option<Vec<usize>>,
 }
 
 #[derive(Default)]
@@ -27,6 +29,7 @@ impl Convergences {
         source: usize,
         value: JsonValue,
         mut flows: Vec<String>,
+        object_id: Option<usize>,
         inputs: &[ConvergeInput],
     ) -> Option<Converged> {
         let input_index = inputs
@@ -44,16 +47,24 @@ impl Convergences {
             .by_node
             .entry(node)
             .or_insert_with(|| std::iter::repeat_with(|| None).take(inputs.len()).collect());
-        arrivals[input_index] = Some(Arrival { value, flows });
+        arrivals[input_index] = Some(Arrival {
+            value,
+            flows,
+            object_id,
+        });
         if !arrivals.iter().all(Option::is_some) {
             return None;
         }
 
         let mut values = IndexMap::new();
         let mut common_flows: Option<Vec<String>> = None;
+        let mut input_object_ids = Vec::with_capacity(inputs.len());
         for (input, arrival) in inputs.iter().zip(arrivals.iter_mut()) {
             let arrival = arrival.take().expect("all convergence inputs arrived");
             values.insert(input.flow_id.clone(), arrival.value);
+            if let Some(object_id) = arrival.object_id {
+                input_object_ids.push(object_id);
+            }
             common_flows = Some(match common_flows {
                 None => arrival.flows,
                 Some(existing) => common_prefix(existing, &arrival.flows),
@@ -63,6 +74,7 @@ impl Convergences {
         Some(Converged {
             value: JsonValue::Object(values),
             flows: common_flows.unwrap_or_default(),
+            input_object_ids: (input_object_ids.len() == inputs.len()).then_some(input_object_ids),
         })
     }
 }

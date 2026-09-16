@@ -6,7 +6,7 @@ from collections.abc import Iterator, Mapping
 from types import MappingProxyType
 from typing import TypeAlias
 
-from ._camau import _Router
+from ._camau import Execution, _Router
 from .task import Task
 from .types import AsyncTask, JsonObject, JsonValue
 
@@ -66,6 +66,17 @@ class Router:
 
     async def run(self, payload: JsonObject) -> JsonObject:
         execution = self._inner.new_run(payload)
+        output = await self._execute(execution)
+        if output is None:
+            raise RuntimeError("compiled workflow stopped without an output")
+        return output
+
+    async def explain(self, payload: JsonObject) -> JsonObject:
+        execution = self._inner.new_explanation(payload)
+        await self._execute(execution)
+        return execution.take_explanation()
+
+    async def _execute(self, execution: Execution) -> JsonObject | None:
         pending: dict[asyncio.Future[JsonObject], list[int]] = {}
         scheduled: dict[int, tuple[object, asyncio.Future[JsonObject]]] = {}
 
@@ -85,20 +96,28 @@ class Router:
                 pending.setdefault(future, []).append(ticket)
 
         try:
-            requests, output = execution.start()
+            requests, output, finished = execution.start()
             schedule(requests)
-            while output is None:
+            while not finished:
                 if not pending:
                     raise RuntimeError("compiled workflow stopped without an output")
                 done, _ = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
                 for completed in done:
+                    if finished:
+                        break
                     tickets = pending.pop(completed)
                     result = completed.result()
                     for ticket in tickets:
-                        requests, candidate = execution.resume(ticket, result)
+                        requests, candidate, finished = execution.resume(ticket, result)
                         schedule(requests)
                         if candidate is not None:
                             output = candidate
+                        if finished:
+                            break
+            for task in pending:
+                task.cancel()
+            if pending:
+                await asyncio.gather(*pending, return_exceptions=True)
             return output
         except BaseException:
             for task in pending:

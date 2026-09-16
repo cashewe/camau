@@ -11,6 +11,7 @@ See [CONFIGURATION.md](./CONFIGURATION.md) for the graph language, [PYTHON-API.m
 3. `Router` assesses the supplied dictionary or JSON string, resolves every referenced task, and compiles an immutable graph.
 4. The gateway reuses that router for requests on one asyncio event loop.
 5. Each `run` converts the request into Rust-owned JSON, executes the graph, and returns a fresh Python dictionary.
+6. An `explain` call executes the same graph and tasks but returns the selected path, deduplicated current-object snapshots, and terminal outcome for debugging.
 
 Router construction performs no task calls and no file or network I/O.
 
@@ -53,6 +54,8 @@ Any in-run failure cancels all active sibling tasks before it propagates. When a
 
 Randomised gates normalize configured finite, non-negative weights with at least one positive route and sample once per execution of the gate. `Router` accepts an optional integer seed. A seeded router promises a repeatable sequence only for the same graph, serial run order, and graph executions with no simultaneously active randomised gates. Concurrent scheduling may consume samples in a different order. Seeding is a testing aid, not stable entity allocation.
 
+`explain` consumes samples from the same router-owned sequence and records the selected route's normalized probability. It explains its own execution rather than predicting a later `run`.
+
 ## Extensibility
 
 Each Rust node implementation declares internal capabilities such as whether it may be an entry or output and what outgoing-edge shape it permits. The assessor consumes the same descriptors rather than maintaining a second node-type list. V1 exposes no custom-node API.
@@ -67,7 +70,7 @@ Each Rust node implementation declares internal capabilities such as whether it 
 - Partial convergence, optional branches, recovery, or fallback policy.
 - Arbitrary expressions, arithmetic, or Python callbacks in mappings.
 - Custom node types.
-- Built-in logging, metrics, traces, or execution metadata.
+- Built-in logging, metrics, or externally emitted traces.
 - Distributed execution, persistence, cycles, or durable workflow state.
 
 These capabilities require user stories before they enter scope.
